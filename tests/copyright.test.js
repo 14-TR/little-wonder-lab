@@ -1,4 +1,9 @@
-MIT License
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
+
+// Keep the owner attribution and the existing MIT grant, condition and disclaimer intact.
+const expectedLicense = `MIT License
 
 Copyright (c) 2026 TR Ingram
 
@@ -19,3 +24,8 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+`;
+
+test('LICENSE credits TR Ingram without changing the MIT terms', () => {
+  assert.equal(readFileSync(new URL('../LICENSE', import.meta.url), 'utf8'), expectedLicense);
+});

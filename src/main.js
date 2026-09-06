@@ -20,7 +20,7 @@ function shell(content, active = 'explore') {
       <nav aria-label="Main navigation"><a href="#explore" ${active === 'explore' ? 'aria-current="page"' : ''}>Explore</a><a href="#request" ${active === 'request' ? 'aria-current="page"' : ''}>Suggest a wonder ${arrow}</a></nav>
     </header>
     <main id="main" tabindex="-1">${content}</main>
-    <footer class="site-footer"><span class="footer-mark">${flower} Small experiments. Big possibilities.</span><span>Made for curious kids & their grown-ups.</span><span>No accounts. No tracking. Just wonder.</span></footer>`;
+    <footer class="site-footer"><span class="footer-mark">${flower} Small experiments. Big possibilities.</span><span>Made for curious kids & their grown-ups.</span><span>No accounts. No tracking. Just wonder.</span><span>© 2026 TR Ingram</span></footer>`;
 }
 
 function lessonCard(lesson, featured = false) {
