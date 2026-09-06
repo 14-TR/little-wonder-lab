@@ -28,7 +28,7 @@ class CleanupTests(unittest.TestCase):
         self.environment.start()
         self.addCleanup(self.environment.stop)
         self.git('init', '-b', 'main')
-        (self.root / '.gitignore').write_text('node_modules/\n')
+        (self.root / '.gitignore').write_text('node_modules/\n/.autonomy-worktrees/\n')
         (self.root / 'lesson.txt').write_text('committed lesson\n')
         self.git('add', '.')
         self.git('commit', '-m', 'fixture')
@@ -37,7 +37,7 @@ class CleanupTests(unittest.TestCase):
         self.store = Store(self.location / 'state.sqlite3')
         self.addCleanup(self.store.close)
         self.item = 'request-1'
-        self.worktree = self.location / 'worktrees' / self.item
+        self.worktree = self.root / '.autonomy-worktrees' / self.item
         self.git('worktree', 'add', '-b', 'auto/' + self.item, str(self.worktree))
         self.receipt = {'item': self.item, 'worktree': str(self.worktree),
                         'branch': 'auto/' + self.item, 'sha': self.sha,
@@ -71,6 +71,19 @@ class CleanupTests(unittest.TestCase):
         self.assertTrue(outside.exists(), 'must not remove outside worktree')
         self.assertEqual(len(result['retained']), 1)
         self.assertEqual(result['cleaned'], [])
+
+    def test_legacy_success_receipt_is_retained_without_migration(self):
+        legacy = self.location / 'worktrees' / self.item
+        legacy.parent.mkdir(parents=True)
+        self.git('worktree', 'move', str(self.worktree), str(legacy))
+        self.receipt['worktree'] = str(legacy)
+        self.save_receipt()
+        before = self.store.db.execute('SELECT * FROM releases').fetchall()
+        result = self.cleanup()
+        self.assertEqual(result['cleaned'], [])
+        self.assertEqual(len(result['retained']), 1)
+        self.assertTrue(legacy.exists())
+        self.assertEqual(self.store.db.execute('SELECT * FROM releases').fetchall(), before)
 
     def test_requires_verified_live_receipt_and_successful_attempt(self):
         original = dict(self.receipt)

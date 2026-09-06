@@ -8,7 +8,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 from autonomy_state import Blocked, Store
 from autonomy_runtime import run_lock, bounded_run, unresolved_guard, clear_after_success
-from autonomy_cleanup import cleanup_successful_worktrees
+from autonomy_cleanup import cleanup_successful_worktrees, owned_worktree_root
 from autonomy_release import Git, GitHub, command, release
 from autonomy_policy import REPO, allowed_path, item_id, pages, scan_requests, sha40, validate_changes
 
@@ -95,7 +95,9 @@ def supervise(root, runner=bounded_run, preflight=check_repo):
 
 def prepare(root, item):
     item_id(item)
-    location = state_dir(root) / 'worktrees' / item
+    location = owned_worktree_root(root) / item
+    if location.resolve() != location:
+        raise Blocked('worktree path must not be a symlink')
     branch = 'auto/' + item
     command(['git', 'fetch', 'origin', 'main'], root)
     if location.exists():
@@ -196,7 +198,7 @@ def main(argv=None, root=ROOT):
             print(json.dumps(store.pending()))
         elif args.action == 'check-local':
             item = item_id(args.item)
-            print(json.dumps(check_local(location / 'worktrees' / item, sha40(args.base))))
+            print(json.dumps(check_local(owned_worktree_root(root) / item, sha40(args.base))))
         elif args.action in {'merge', 'recover-merged'}:
             attempt = active(store)
             old = store.pending()

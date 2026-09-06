@@ -142,6 +142,8 @@ Only after establishing that the prior run's tools have ended, archive `unresolv
 
 ## Operator retention maintenance
 
+Implementation worktrees live under the ignored `/Users/tr/little-wonder-lab/.autonomy-worktrees/ITEM`, **not** inside Git metadata. The canonical `.git/autonomy/` location is only for private state/evidence. Vite's default `**/.git/**` protection correctly refuses serving the legacy `.git/autonomy/worktrees/ITEM` layout; leave Vite's deny list intact. Existing legacy paths/receipts are not auto-migrated or deleted: pause both jobs, reconcile processes, hold the run lock, back up the checkpoint, and use `git worktree move` plus an exact checkpoint-path update as reviewed operator maintenance before resuming. Preserve attempt counts and failure history.
+
 After verified live success, while still holding the supervisor lock, the runner removes only exact registered, clean agent-owned worktrees whose branch, HEAD and successful live receipt match. Normal `git worktree remove` also removes ignored dependencies; `--force` is never used. Dirty, failed, pending, locked, changed or ambiguous worktrees are retained and reported, not recursively deleted. Receipts, logs, ledger and branches remain available. Optional long-term log archiving requires pausing BOTH project jobs and using the SQLite backup API; never delete ledger rows to regain attempts or touch unrelated repositories/profiles.
 
 ## Verification commands
