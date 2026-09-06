@@ -13,18 +13,29 @@ def _git(root, *args):
                           check=True, timeout=60).stdout
 
 
+def owned_worktree_root(root):
+    """Anchor ownership to the canonical operator checkout, even from a linked tree."""
+    common = Path(_git(root, 'rev-parse', '--path-format=absolute', '--git-common-dir').strip()).resolve()
+    if common.name != '.git':
+        raise Blocked('standard operator .git directory required')
+    owned = common.parent / '.autonomy-worktrees'
+    if owned.resolve() != owned:
+        raise Blocked('owned worktree root must not be a symlink')
+    return owned
+
+
 def cleanup_successful_worktrees(root, store):
     """Remove only proven successful worktrees; never delete receipts or branches."""
     result = {'cleaned': [], 'retained': []}
     try:
-        common = Path(_git(root, 'rev-parse', '--path-format=absolute', '--git-common-dir').strip()).resolve()
+        owned = owned_worktree_root(root)
         rows = [(day, attempt, json.loads(raw)) for day, attempt, raw in
                 store.db.execute('SELECT day, attempt, receipt FROM releases')]
         counts = Counter(item_id(receipt['item']) for _, _, receipt in rows)
     except (Blocked, KeyError, TypeError, ValueError, OSError, sqlite3.Error,
             subprocess.SubprocessError) as exc:
         return {'cleaned': [], 'retained': [{'item': None, 'worktree': None, 'reason': str(exc)}]}
-    owned = common / 'autonomy' / 'worktrees'
+
     for day, attempt, receipt in rows:
         entry = {'day': day, 'item': None, 'worktree': None}
         try:

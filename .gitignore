@@ -6,6 +6,7 @@ dist/
 playwright-report/
 test-results/
 .automation/
+/.autonomy-worktrees/
 .env*
 !.env.example
 .DS_Store
