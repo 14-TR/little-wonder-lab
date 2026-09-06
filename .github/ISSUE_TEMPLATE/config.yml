@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Private security concerns
+    url: https://github.com/14-TR/little-wonder-lab/security/policy
+    about: Do not disclose vulnerabilities or personal data in a public lesson request.

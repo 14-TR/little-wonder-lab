@@ -1,0 +1,199 @@
+[
+  {
+    "id": "shadow-detective",
+    "title": "The Shadow Detective",
+    "subtitle": "A little hand. A big, friendly hello.",
+    "topic": "Science",
+    "duration": 18,
+    "order": 1,
+    "published": "2026-09-06",
+    "kind": "shadows",
+    "question": "Can you grow a shadow without growing your hand?",
+    "idea": "A shadow is a place where an object blocks light. Let's make a friendly shadow wave!",
+    "vocabulary": [
+      { "word": "shadow", "meaning": "A darker place where something blocks light." },
+      { "word": "opaque", "meaning": "Not see-through: light does not pass through it." },
+      { "word": "predict", "meaning": "Say what you think will happen before you test." }
+    ],
+    "materials": [
+      "Your hand",
+      "A pale wall with a clear space in front of it",
+      "Optional: a cool, mains-powered LED lamp already safely set up by a grown-up; no batteries needed",
+      "Paper and a crayon, if you want to draw your observations"
+    ],
+    "steps": [
+      {
+        "title": "1. Meet your shadow · 3 minutes",
+        "body": "Explore the picture first. The hands-on part is optional. For a real test, ask a grown-up to aim the cool LED light at a pale wall. Keep enough room light to move safely. Put your open hand between the light and wall. Give your shadow a friendly name!"
+      },
+      {
+        "title": "2. Make a prediction · 2 minutes",
+        "body": "Keep your hand in the same open shape. What might happen to its shadow if your hand moves closer to the light: bigger, smaller, or about the same? Say or draw your guess. A guess is a starting idea, not a score."
+      },
+      {
+        "title": "3. Choose a fair test · 3 minutes",
+        "body": "Leave the light and wall in the same places. Keep your hand facing the wall without turning it or spreading your fingers differently. Change only where your hand sits between the light and wall. Stay at least a grown-up's hand-length from the lamp."
+      },
+      {
+        "title": "4. Near the wall, then near the light · 4 minutes",
+        "body": "Hold your hand near the wall, without touching it. Notice the shadow's size. Slide your hand toward the light, staying in its beam and well away from the lamp. Look again. Draw two quick shadows, or tell a grown-up which looked larger."
+      },
+      {
+        "title": "5. Try the trip again · 3 minutes",
+        "body": "Move back to your first spot, then to your second spot. Does the same pattern happen again? If an edge is fuzzy, compare the whole shadow rather than guessing an exact size. If it is hard to see, ask your grown-up for help or use the picture instead."
+      },
+      {
+        "title": "6. Share the clue · 3 minutes",
+        "body": "Finish: 'I predicted ___. I noticed ___. We kept ___ the same.' What blocked the light? Did your hand really grow? End with a small shadow wave and a big shadow wave."
+      }
+    ],
+    "prediction": "With the light and wall staying still, will moving your hand toward the light make its shadow bigger, smaller, or about the same? Why do you think so?",
+    "explanation": "Your hand blocks some light that would reach the wall. In this setup, light spreads out from the lamp. Moving the same hand closer to that light usually makes a larger shadow on the fixed wall. Your hand has not grown! Other light in the room can make the shadow look lighter.",
+    "parentNote": "Read aloud, let the child point or dictate, and skip the physical activity if a suitable cool LED light is unavailable. Use one light source where possible; a large or multi-LED lamp can give fuzzy or overlapping shadows. Keep the lamp and wall fixed, the hand in the beam, and the hand's shape and orientation constant. These conditions matter: this is not a rule that moving nearer the Sun makes an outdoor shadow grow. Ask 'What did you notice?' before explaining. Approximate timing includes setup; stop whenever curiosity or comfort runs out.",
+    "safety": "A grown-up checks that the LED lamp stays cool and operates it. Leave plugs and cords alone; keep cords out of walkways. Never touch or cover the lamp, and keep your hand well away from it. Do not use hot lamps, flames, lasers, batteries, or direct sunlight for this activity. Never stare into a light. Keep enough light to walk safely. The screen-only version needs no materials.",
+    "challenge": "Can you return your hand to a spot that makes about the same shadow size as before? Keep its shape the same. Then invent a kind greeting for your shadow friend.",
+    "prerequisites": [],
+    "sources": [
+      {
+        "title": "Science Buddies — Change the Size of a Shadow! (light and shadow-size explanation)",
+        "url": "https://www.sciencebuddies.org/stem-activities/change-the-size-of-a-shadow"
+      },
+      {
+        "title": "Exploratorium — Shadows (museum guidance for investigating shadow size, shape, and position)",
+        "url": "https://www.exploratorium.edu/education/ifi/watch-and-do/shadows"
+      }
+    ]
+  },
+  {
+    "id": "ramp-racers",
+    "title": "Ramp Racers",
+    "subtitle": "One little car. Two gentle hills.",
+    "topic": "Science",
+    "duration": 18,
+    "order": 2,
+    "published": "2026-09-06",
+    "kind": "ramps",
+    "question": "Will the same car roll farther after a higher ramp?",
+    "idea": "Let's race two ramp setups, not two people. Change the height and look for a pattern.",
+    "vocabulary": [
+      { "word": "ramp", "meaning": "A sloping surface with one end higher than the other." },
+      { "word": "gravity", "meaning": "The pull toward Earth that helps the car roll downhill." },
+      { "word": "fair test", "meaning": "A comparison where we change one thing and keep other important things the same." }
+    ],
+    "materials": [
+      "One large, freely rolling toy car with secure wheels; no motor, batteries, magnets, or pull-back mechanism",
+      "One stiff piece of smooth cardboard, about as long as a grown-up's forearm, with no sharp edges",
+      "Two thin, flat books for a low, stable support",
+      "A clear, level stretch of indoor floor",
+      "Paper, a crayon, and optional low-tack tape approved for the floor"
+    ],
+    "steps": [
+      {
+        "title": "1. Open the tiny test track · 3 minutes",
+        "body": "Explore the picture first; building a track is optional. On the floor, rest one end of the cardboard on one thin book. Ask a grown-up to steady it. Leave a clear run-out space. Mark where the ramp meets the floor and a starting line near its top."
+      },
+      {
+        "title": "2. Predict the roll · 2 minutes",
+        "body": "Imagine lifting the same ramp with a second thin book. Will the car stop farther from the bottom, nearer to it, or about the same distance away? Share a reason. We are comparing stopping distance, not measuring speed."
+      },
+      {
+        "title": "3. Test the low ramp · 4 minutes",
+        "body": "Put the car's front wheels at the starting line. Let go without a push. When it stops, place a paper marker beside its front wheels, out of the driving lane. Do three rolls and label the markers L1, L2, and L3. Did they stop together or spread out?"
+      },
+      {
+        "title": "4. Change only the height · 4 minutes",
+        "body": "Ask a grown-up to add the second thin book. Keep the ramp's bottom at its floor mark. Use the same car, ramp, floor, starting line, and no-push release. Do three more rolls. Mark the stops H1, H2, and H3. Keep the ramp low enough that the car rolls rather than jumps."
+      },
+      {
+        "title": "5. Read your road map · 2 minutes",
+        "body": "Compare the two groups of markers from the same ramp-bottom mark. Which group is generally farther away? 'They overlap' or 'I cannot tell yet' are useful results too. If a car hit something, mark that roll as bumped and repeat it on a clear track."
+      },
+      {
+        "title": "6. Tell the racing story · 3 minutes",
+        "body": "Finish: 'We changed ___. We kept ___ the same. Most of our ___ rolls went ___. My prediction was ___.' Why were three rolls more helpful than one? What would you check if the car behaved differently next time?"
+      }
+    ],
+    "prediction": "Will a higher starting ramp make this car roll farther across the same floor, less far, or about the same distance? Make your guess before racing.",
+    "explanation": "Gravity helps the car roll downhill. With the same car and a smooth track, starting higher often lets it reach the bottom faster and roll farther before stopping. Rubbing in the wheels and against surfaces takes energy out of its motion. Bumps, a bend in the cardboard, and the ramp-to-floor join can change the result. Farther is a distance observation; it is not a direct measurement of speed.",
+    "parentNote": "This lesson builds on noticing a change in Shadow Detective, but it is open to everyone. The variable is support height: for the same ramp length, its steepness changes too. Keep the ramp bottom anchored at the same floor mark, the release position marked on the ramp, and the run-out surface unchanged. The main measurement is distance from the ramp bottom to the stopped front wheels, not total travel from the starting line. Compare clusters visually; no stopwatch, arithmetic, or exact units are required. If the car will not roll at either safe height, record that and use the illustration rather than pushing it or building a high ramp. Do not force an expected result.",
+    "safety": "A grown-up checks for firmly attached wheels and no small loose pieces. Use a large non-powered toy, not marbles, small balls, magnets, coins, or batteries. Build only on the floor with two thin books at most, well away from stairs, doorways, pets, and younger children. Keep the lane clear and never aim at anyone. Do not climb or stand on the ramp. Skip hands-on play if the setup is not stable or the car jumps.",
+    "challenge": "Choose a stopping place within the distances you observed. Can you find a gentle ramp height that gets the car near it without pushing? Test it twice. Getting close is a design clue, not a perfect-score challenge.",
+    "prerequisites": ["shadow-detective"],
+    "sources": [
+      {
+        "title": "Science World — Ramp Rollers (ramp steepness and surface effects)",
+        "url": "https://www.scienceworld.ca/resource/ramp-rollers/"
+      },
+      {
+        "title": "Science Buddies — Paper Roller Coasters: Kinetic and Potential Energy (background science only; not the marble activity)",
+        "url": "https://www.sciencebuddies.org/teacher-resources/lesson-plans/roller-coaster-kinetic-potential-energy"
+      }
+    ]
+  },
+  {
+    "id": "paper-bridge",
+    "title": "The Paper Bridge Bureau",
+    "subtitle": "A tiny river needs a clever crossing.",
+    "topic": "Engineering",
+    "duration": 20,
+    "order": 3,
+    "published": "2026-09-06",
+    "kind": "bridges",
+    "question": "Can changing a paper's shape help it carry the same load?",
+    "idea": "Be a bridge designer. Try flat paper, then give another sheet folded sides. No extra paper needed!",
+    "vocabulary": [
+      { "word": "bridge", "meaning": "A structure that carries things across a gap." },
+      { "word": "load", "meaning": "Something a bridge carries." },
+      { "word": "stiff", "meaning": "Hard to bend in the direction you are testing." }
+    ],
+    "materials": [
+      "Two fresh sheets of the same ordinary drawing or printer paper, the same size and thickness",
+      "Two flat books of similar thickness for riverbanks",
+      "One clean, dry, adult-size plastic spoon as the test load; no detachable parts",
+      "A crayon",
+      "Optional: a ruler and two extra matching sheets for a repeat comparison"
+    ],
+    "steps": [
+      {
+        "title": "1. Plan a paper crossing · 3 minutes",
+        "body": "Explore the picture; real building is optional. Put two books flat on the floor with a gap about 15 cm wide, or about a grown-up's hand-span. That is your pretend river. Ask a grown-up to check that both paper ends can rest well on the books."
+      },
+      {
+        "title": "2. Predict before you fold · 2 minutes",
+        "body": "You will compare a flat sheet with a sheet that has raised sides. Which might bend less under the same spoon? Draw your guess. Engineers can change their minds after a test."
+      },
+      {
+        "title": "3. Make two designs · 4 minutes",
+        "body": "Leave one sheet flat. On the other, fold each long edge upward to make two side walls about two finger-widths tall. The middle stays flat, like a little road. The folds must run all the way from one book to the other. Ask a grown-up to help press the creases."
+      },
+      {
+        "title": "4. Keep the comparison fair · 3 minutes",
+        "body": "Keep the books in place. Point each sheet's long direction across the gap, with equal amounts resting on the books at both ends. Mark the center of each bridge. Use the same spoon, in the same position and direction, for both. Only the paper's shape is different."
+      },
+      {
+        "title": "5. Send the spoon across · 5 minutes",
+        "body": "Try the flat bridge first. Gently place the spoon across its center, handle pointing toward a side of the river rather than toward a book. The spoon must not touch either book. Look from the side: does the paper stay nearly level, sag, or fall? Remove the spoon. Repeat with the folded bridge, keeping its walls upright. Say or draw what each did."
+      },
+      {
+        "title": "6. Report to the bridge bureau · 3 minutes",
+        "body": "Finish: 'Our flat bridge ___. Our folded bridge ___. We changed ___, but kept ___ the same.' Which would you choose for this spoon, and what is your evidence? If both worked or both fell, that is a real result. What would you try next?"
+      }
+    ],
+    "prediction": "Which bridge do you think will bend less under the same spoon: a flat sheet or a sheet with two upright folded sides? What makes you think that?",
+    "explanation": "Paper bends easily when it lies flat. Folding up side walls changes the bridge's shape and can make it harder to bend downward across the gap. The paper is still paper; we did not add more. A folded bridge may sag less under the same load. How well it works depends on the folds, paper, gap, and where the load sits. One spoon test does not tell us the heaviest load a bridge could carry.",
+    "parentNote": "This lesson borrows Ramp Racers' fair-comparison habit; the earlier lesson is a suggestion, not an entry requirement. Use two matching fresh sheets rather than unfolding a creased one for the flat control. The long dimension spans the gap; the two long-edge creases run parallel to that span, making a U-shaped channel when seen from an end. Center the same full-size plastic spoon across the width of the bridge so it cannot become a second bridge between the books. Keep span, end overlap, paper type, and load placement constant. Compare deflection qualitatively: nearly level, sagging, or fallen. Do not claim a maximum load or a universal strongest shape. If results are indistinguishable, describe them honestly. A repeat comparison with two fresh matching sheets is optional, not necessary within the 20 minutes.",
+    "safety": "Build on the floor with two flat books, not tall stacks. Use only a lightweight, unbroken, full-size plastic spoon with no sharp edges or detachable parts. No coins, batteries, magnets, small weights, glass, sharp tools, or heavy loads. Keep the spoon out of mouths and collect all materials afterward, especially around younger children and pets. This is a model bridge: never stand on it or put a person or pet on it.",
+    "challenge": "If you have two more matching sheets, repeat both designs with fresh paper. Does the pattern repeat? Or sketch a new shape for another day. Change just one design feature when you compare again.",
+    "prerequisites": ["ramp-racers"],
+    "sources": [
+      {
+        "title": "Science Buddies — Paper Bridge Design Challenge (shape and bending stiffness; our load is adapted for safety)",
+        "url": "https://www.sciencebuddies.org/teacher-resources/lesson-plans/paper-bridge-design"
+      },
+      {
+        "title": "Science World — Supportive Shapes (comparing paper-bridge designs; not its coin-load instructions)",
+        "url": "https://www.scienceworld.ca/resource/supportive-shapes/"
+      }
+    ]
+  }
+]

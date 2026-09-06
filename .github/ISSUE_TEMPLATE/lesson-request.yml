@@ -1,0 +1,37 @@
+name: Request a little wonder
+description: Suggest a STEM question or a hands-on lesson improvement.
+title: "[Lesson request] "
+labels: [lesson-request]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A grown-up should submit this form. Requests are public. Do not include a child's name, age/birthday, school, location, photo, or other identifying details.
+        A request is a suggestion, not a promise of a lesson or a publication date. No files, code, credentials, or purchases are needed.
+  - type: textarea
+    id: wonder
+    attributes:
+      label: What are you wondering about?
+      description: Describe the STEM question in your own words.
+      placeholder: Why do some things float and others sink?
+    validations:
+      required: true
+  - type: dropdown
+    id: topic
+    attributes:
+      label: Topic
+      options: [Science, Technology, Engineering, Math, Not sure]
+    validations:
+      required: true
+  - type: textarea
+    id: activity
+    attributes:
+      label: What would you like to try or improve?
+      description: Optional. Household materials, an existing lesson, or accessibility needs—without personal details.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Before submitting
+      options:
+        - label: I am a grown-up and have not included identifying information about a child.
+          required: true

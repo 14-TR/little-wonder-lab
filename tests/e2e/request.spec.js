@@ -1,0 +1,31 @@
+import { test, expect } from './fixtures.js';
+
+test('a parent can prepare a public GitHub draft without claiming anything was sent', async ({ page }) => {
+  const external = [];
+  page.on('request', request => { if (!request.url().startsWith('http://127.0.0.1')) external.push(request.url()); });
+  await page.goto('./#request');
+  await expect(page.getByRole('heading', { name: 'What are you wondering?' })).toBeVisible();
+  await expect(page.getByText('Do not include', { exact: false })).toBeVisible();
+  await page.getByRole('button', { name: 'Prepare GitHub draft' }).click();
+  await expect(page.getByRole('alert')).toContainText('question');
+  await expect(page.getByRole('link', { name: 'Open draft on GitHub' })).toHaveCount(0);
+  await page.getByLabel('Your wonder').fill('Why do rainbows bend? & ☀');
+  await page.getByLabel('Anything else to explore?').fill('Colors & light <script>');
+  await page.getByLabel('I am a grown-up').check();
+  await page.getByRole('button', { name: 'Prepare GitHub draft' }).click();
+  const draft = page.getByRole('link', { name: 'Open draft on GitHub' });
+  await expect(draft).toBeVisible();
+  const url = new URL(await draft.getAttribute('href'));
+  expect(url.origin).toBe('https://github.com');
+  expect(url.pathname).toBe('/14-TR/little-wonder-lab/issues/new');
+  expect(url.searchParams.get('title')).toBe('Lesson request: Why do rainbows bend? & ☀');
+  expect(url.searchParams.get('body')).toContain('Colors & light <script>');
+  await expect(page.getByText('Nothing has been sent.', { exact: false })).toBeVisible();
+  await expect(page.getByText('Submit new issue', { exact: false })).toBeVisible();
+  expect(external).toEqual([]);
+  await page.getByLabel('Your wonder').fill('What makes wind?');
+  await expect(draft).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByLabel('Your wonder')).toBeEmpty();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
+});
