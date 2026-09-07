@@ -19,12 +19,49 @@ class RoleContractTests(unittest.TestCase):
         self.assertEqual(len(budget), 6)
         self.assertEqual(sum(budget.values()), 2100)
         self.assertGreaterEqual(budget['Planner'], 360, 'three minutes interrupted observed provider response')
-        self.assertGreaterEqual(budget['Engineering and gates'], 780)
+        self.assertGreaterEqual(budget['Engineering and gates'], 720)
+        engineer = re.search(r'a tighter (\d+)-minute/35-tool-call budget', lead)
+        gates = re.search(r'reserve the other (\d+) seconds of this stage for lead gates', lead)
+        assert engineer is not None and gates is not None, 'explicit engineer/gate split required'
+        self.assertEqual(int(engineer[1]) * 60 + int(gates[1]), budget['Engineering and gates'])
+        self.assertGreaterEqual(int(gates[1]), 180, 'selection must not consume mandatory lead gates')
         self.assertGreaterEqual(budget['Independent review'], 360)
         self.assertGreaterEqual(budget['Release'], 420)
         self.assertGreaterEqual(budget['Buffer'], 120)
         self.assertNotRegex(lead, r'3-minute|Three-minute|three-minute')
         self.assertIn('2400', lead)
+
+    def test_selection_and_engineering_admission_boundaries(self):
+        lead = (ROOT / 'automation/roles/lead.md').read_text()
+        rows = re.findall(r'^\| (Selection|Planner|Engineering and gates|Independent review|Release|Buffer) \| (\d+) \| (\d+) \|$', lead, re.M)
+        budget = {name: int(seconds) for name, seconds, _ in rows}
+        elapsed = 0
+        for name, seconds, finish in rows:
+            elapsed += int(seconds)
+            self.assertEqual(elapsed, int(finish), name)
+        admission = re.search(r'Before engineering require at least (\d+) seconds remaining', lead)
+        assert admission is not None, 'explicit engineering admission threshold required'
+        reserve = int(admission[1])
+        downstream = sum(budget[name] for name in (
+            'Engineering and gates', 'Independent review', 'Release', 'Buffer'))
+        self.assertEqual(reserve, downstream, 'all downstream allocations must remain reserved')
+        self.assertIn('If selection cannot finish in its allocation', lead)
+
+        # Model the actual prompt admission rules, including lead handoff time.
+        # This is an offline contract regression, not a runtime enforcement test.
+        def admitted(selection, planning, handoff: float = 0):
+            return (selection <= budget['Selection']
+                    and planning <= budget['Planner']
+                    and elapsed - selection - planning - handoff >= reserve)
+
+        self.assertTrue(admitted(65, 360), 'ordinary selection must leave the full planner window')
+        handoff_room = elapsed - reserve - 65 - 360
+        self.assertGreaterEqual(handoff_room, 0)
+        self.assertTrue(admitted(65, 360, handoff_room), 'exact full downstream reserve fits')
+        self.assertFalse(admitted(65, 360, handoff_room + 0.001), 'never borrow downstream reserves')
+        self.assertTrue(admitted(budget['Selection'], 360))
+        self.assertFalse(admitted(budget['Selection'] + 0.001, 360))
+        self.assertFalse(admitted(65, 360.001), 'planner window remains bounded')
 
     def test_new_item_can_receive_a_planner_chosen_lesson_id(self):
         for relative in ('automation/roles/lead.md', 'automation/roles/planner.md'):
