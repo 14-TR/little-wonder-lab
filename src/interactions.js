@@ -1,4 +1,5 @@
-import { shadowModel, rampModel, bridgeModel } from './models.js';
+import { shadowModel, rampModel, bridgeModel, patternModel } from './models.js';
+import { patternSymbols } from './illustrations.js';
 
 export const hand = 'M-13 27l-11-21q-4-8 1-10 5-2 10 9l1-29q0-9 5-9t5 9v15l2-30q1-8 6-7t4 8l-1 29 3-24q1-8 6-7t3 9l-3 25 4-14q2-8 6-6t2 10l-4 24q-1 12-12 20v10h-23z';
 const modelFrame = (title, instruction, scene, controls, note) => `<section class="interactive" aria-labelledby="model-title"><div class="model-heading"><div><p class="eyebrow">A TINY ON-SCREEN EXPERIMENT</p><h2 id="model-title">${title}</h2></div><p>${instruction}</p></div><div class="model-stage">${scene}</div><div class="model-controls">${controls}</div><p id="model-result" class="model-result" role="status" aria-live="polite"></p><p class="model-note">A simple picture, not a measurement. ${note}</p></section>`;
@@ -78,7 +79,66 @@ function mountBridges(container) {
   update();
 }
 
-const renderers = { shadows: mountShadows, ramps: mountRamps, bridges: mountBridges };
+function mountPatterns(container) {
+  container.innerHTML = `<section class="interactive pattern-interactive" aria-labelledby="model-title">
+    <div class="model-heading"><div><p class="eyebrow">AN ARRANGED REPEATING RULE</p><h2 id="model-title">What belongs in the next space?</h2></div><p>Predict before choosing. Point, say, or draw your idea. You can just watch, too.</p></div>
+    <div class="pattern-actions" role="group" aria-label="Choose a repeat"><button class="button secondary" type="button" data-pattern="AB" aria-pressed="true">AB</button><button class="button secondary" type="button" data-pattern="AAB" aria-pressed="false">AAB</button></div>
+    <div class="model-stage"><p id="pattern-repeat"></p><div id="pattern-drawing" class="pattern-units" aria-hidden="true"></div><p class="pattern-reading">Read the path (bars separate groups): <span id="pattern-sequence"></span></p></div>
+    <div class="model-controls pattern-actions"><button class="button secondary" type="button" data-symbol="leaf">Leaf</button><button class="button secondary" type="button" data-symbol="flower">Flower</button></div>
+    <div class="model-controls pattern-actions"><button class="button" type="button" id="pattern-next" aria-disabled="true">Next space</button><button class="button secondary" type="button" id="pattern-restart">Restart path</button></div>
+    <p id="model-result" class="model-result" role="status" aria-live="polite" aria-atomic="true"></p>
+    <p class="model-note">We arranged these drawings to repeat. Real plants do not all grow in repeating rows. No answers are saved.</p></section>`;
+  let mode = 'AB';
+  let length = 5;
+  let filled = false;
+  const status = container.querySelector('#model-result');
+  const next = container.querySelector('#pattern-next');
+  const prompt = 'What comes next? Say the repeat before choosing a drawing.';
+  function draw() {
+    const model = patternModel(mode, length);
+    const sequence = [...model.sequence, ...(filled ? [] : ['blank'])];
+    const groups = [];
+    for (let index = 0; index < sequence.length; index += model.unit.length) groups.push(sequence.slice(index, index + model.unit.length));
+    container.querySelector('#pattern-repeat').textContent = `Repeat group (${mode}): ${model.unit.join(', ')}. Say the whole group again.`;
+    container.querySelector('#pattern-sequence').textContent = groups.map(group => group.join(', ')).join(' | ');
+    container.querySelector('#pattern-drawing').innerHTML = groups.map(group => `<div class="pattern-group">${group.map(symbol => `<div class="pattern-tile"><svg viewBox="0 0 60 60" stroke="#344e3d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${patternSymbols[symbol]}</svg><span>${symbol === 'blank' ? 'next?' : symbol}</span></div>`).join('')}</div>`).join('');
+    container.querySelectorAll('[data-symbol]').forEach(button => button.setAttribute('aria-disabled', String(filled)));
+    next.setAttribute('aria-disabled', String(!filled || length === 8));
+    container.querySelectorAll('[data-pattern]').forEach(button => button.setAttribute('aria-pressed', String(button.dataset.pattern === mode)));
+  }
+  container.querySelectorAll('[data-symbol]').forEach(button => button.addEventListener('click', () => {
+    if (filled) return;
+    const model = patternModel(mode, length);
+    if (button.dataset.symbol !== model.expected) {
+      status.textContent = `Try looking at the whole group. ${model.reason} The space is still here for another try.`;
+      return;
+    }
+    length += 1;
+    filled = true;
+    status.textContent = `That fits the rule! ${model.reason} ${length === 8 ? 'Three drawings added. Tell the repeat story, restart, or switch paths.' : 'Choose Next space when you want another blank.'}`;
+    draw();
+  }));
+  next.addEventListener('click', () => {
+    if (!filled || length === 8) return;
+    filled = false;
+    status.textContent = prompt;
+    draw();
+  });
+  function restart() {
+    length = 5;
+    filled = false;
+    status.textContent = prompt;
+    draw();
+  }
+  container.querySelector('#pattern-restart').addEventListener('click', restart);
+  container.querySelectorAll('[data-pattern]').forEach(button => button.addEventListener('click', () => {
+    mode = button.dataset.pattern;
+    restart();
+  }));
+  restart();
+}
+
+const renderers = { shadows: mountShadows, ramps: mountRamps, bridges: mountBridges, patterns: mountPatterns };
 export const interactiveKinds = Object.freeze(Object.keys(renderers));
 export function mountInteractive(kind, container) {
   if (!Object.hasOwn(renderers, kind)) throw new TypeError(`Unsupported interactive kind: ${kind}`);

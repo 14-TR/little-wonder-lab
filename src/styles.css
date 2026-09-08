@@ -161,6 +161,18 @@
   .lesson-end { display:flex; justify-content:space-between; align-items:center; gap:24px; padding:30px 0 45px; }
   .lesson-end > span { font-family:var(--serif); font-style:italic; color:var(--muted); }
   .interactive { margin-top:35px; border:1px solid var(--rule); background:#f4f1e3; }
+  .pattern-interactive .model-stage { padding:22px 20px; }
+  #pattern-repeat { text-align:center; font-weight:bold; }
+  .pattern-units { display:flex; flex-wrap:wrap; justify-content:center; gap:18px; margin:24px 0; }
+  .pattern-group { display:flex; gap:6px; padding:0 4px 10px; border-bottom:2px solid #788369; }
+  .pattern-tile { width:60px; text-align:center; font-size:.8rem; }
+  .pattern-tile svg { height:60px; }
+  .pattern-reading { max-width:65ch; margin:auto; text-align:center; font-size:.9rem; }
+  .pattern-actions { display:flex; justify-content:center; flex-wrap:wrap; gap:12px; }
+  .pattern-actions .button { min-width:88px; }
+  .pattern-interactive [aria-disabled=true] { border-style:dashed; }
+  .art-wrap.patterns .folio { position:static; display:block; margin:17px 23px 12px; }
+  .art-wrap.patterns .illustration { width:100%; max-width:100%; margin:0; }
   .model-heading { display:flex; justify-content:space-between; align-items:end; gap:25px; padding:25px 30px 20px; }
   .model-heading .eyebrow { color:var(--accent); margin-bottom:10px; }
   .model-heading h2 { font-size:1.85rem; }

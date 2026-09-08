@@ -1,5 +1,22 @@
 const clamp = (value, min, max, fallback = min) => Math.min(max, Math.max(min, Number.isFinite(Number(value)) ? Number(value) : fallback));
 
+const patternUnits = Object.freeze({ AB: Object.freeze(['leaf', 'flower']), AAB: Object.freeze(['leaf', 'leaf', 'flower']) });
+
+// Exact arranged rules, not observations of how plants grow. Length is bounded
+// to the five starting drawings plus three additions; invalid inputs fail closed.
+export function patternModel(mode, length) {
+  if (!Object.hasOwn(patternUnits, mode)) throw new TypeError('Unsupported pattern mode');
+  if (!Number.isInteger(length) || length < 0 || length > 8) throw new RangeError('Pattern length must be an integer from 0 to 8');
+  const unit = patternUnits[mode];
+  const position = length % unit.length + 1;
+  const expected = unit[position - 1];
+  return {
+    unit, position, expected,
+    sequence: Array.from({ length }, (_, index) => unit[index % unit.length]),
+    reason: `The repeat is ${unit.join(', ')}. This is place ${position} in that group, so ${expected} comes next.`,
+  };
+}
+
 // Fixed point light and wall; an unchanged hand moves between them.
 // Geometry illustrates the trend only: this is not a real-world measurement.
 export function shadowModel(position) {

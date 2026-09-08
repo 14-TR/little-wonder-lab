@@ -195,5 +195,43 @@
         "url": "https://www.scienceworld.ca/resource/supportive-shapes/"
       }
     ]
+  },
+  {
+    "id": "pattern-path",
+    "title": "Pattern Path",
+    "subtitle": "Find the little group hiding in a trail of drawings.",
+    "topic": "Math",
+    "duration": 15,
+    "order": 4,
+    "published": "2026-09-07",
+    "kind": "patterns",
+    "question": "Which drawing comes next when the same little group repeats?",
+    "idea": "A repeating pattern uses the same little group again in the same order. Find the group, then follow its rule.",
+    "vocabulary": [
+      { "word": "repeat", "meaning": "Do the same thing again in the same order." },
+      { "word": "unit", "meaning": "The whole little group we repeat." },
+      { "word": "rule", "meaning": "A guide that tells us which drawing belongs next." }
+    ],
+    "materials": [
+      "Screen-only: no materials needed",
+      "Optional: one full sheet of paper and a large intact crayon checked by a grown-up"
+    ],
+    "steps": [
+      { "title": "Choose screen or paper", "body": "You can watch, point, speak, or ask a grown-up to draw. Paper play is optional. Before drawing, a grown-up checks a full sheet of paper and a large intact crayon. Keep crayons out of mouths. No cutting or collecting plants or small objects. Stop whenever you like." },
+      { "title": "Walk the AB path", "body": "Say leaf, flower; leaf, flower; leaf, blank. The bars in the example below separate groups. AB is a short name for leaf, flower. Point to each whole group. Before choosing or drawing, predict the next symbol and share a reason." },
+      { "title": "Add three drawings", "body": "Follow the same AB rule for three new spaces, one at a time. On screen, choose Leaf or Flower and read the explanation together. Choose Next space when you want another blank. On paper, draw each new symbol large. Say the whole group whenever you need a clue." },
+      { "title": "Try the AAB path", "body": "Now repeat leaf, leaf, flower. AAB has two leaves together before its flower; it does not switch every time. Start with leaf, leaf, flower; leaf, leaf, blank. Predict, then add three drawings using this rule. Compare the groups: what changed, and what stayed the same?" },
+      { "title": "Tell the path story", "body": "Finish by pointing, speaking, or drawing: 'My repeat group is ___. I chose ___ because ___. AB and AAB are different because ___.' Restart or switch paths if you want. Put away paper and crayons, especially around younger children and pets." }
+    ],
+    "prediction": "AB: leaf, flower | leaf, flower | leaf, ___. AAB: leaf, leaf, flower | leaf, leaf, ___. Each bar separates repeat groups. What belongs in each blank? Say the whole repeat, then predict the next three drawings. Point, speak, or draw before checking.",
+    "explanation": "For AB, repeat leaf, flower. After the starting five drawings, the next three are flower, leaf, flower. For AAB, repeat leaf, leaf, flower. After its starting five drawings, the next three are flower, leaf, leaf. Those two leaves belong together in the same group. The symbols stay the same, but their repeating group changes. We arranged these drawings to repeat; real plants do not all grow in repeating rows.",
+    "parentNote": "The goal is to identify a whole repeating unit, predict, and explain using it, not to earn points. Shadow Detective offers an optional noticing-and-predicting connection: notice what is there and share an idea before checking. No earlier lesson is required. Compare the two deliberately arranged rules rather than treating the drawing as a physical experiment. AB and AAB are labels for our chosen units, not reading requirements. Read aloud, accept pointing or dictation, draw for the child, watch, or stop. The 15-minute visit and paper adaptation are editorial estimates, not child-tested results. NRICH supports continuing repeating units and asking for their rule; our AAB botanical example is an original adaptation. Links are grown-up mathematical background, not recommendations to copy their small-object activities.",
+    "safety": "Screen-only needs no materials. For optional drawing, a grown-up checks a full sheet of paper and a large intact crayon. Keep crayons out of mouths and put materials away around younger children and pets. Draw large symbols; do not cut or collect objects. No berries, seeds, beads, small pieces, tasting, scissors, or purchases are needed.",
+    "challenge": "Cover the explanation and point to each whole group in either printed example. Can you explain why the next two leaves in AAB belong together? Invite a grown-up to follow your rule by drawing, or tell them what to draw.",
+    "prerequisites": ["shadow-detective"],
+    "sources": [
+      { "title": "NRICH — Developing Pattern Awareness With Young Children (repeating units and their rules)", "url": "https://nrich.maths.org/articles/developing-pattern-awareness-young-children" },
+      { "title": "NRICH — Pattern Making (continuing repeats and representing them with symbols)", "url": "https://nrich.maths.org/eyfs-activities/pattern-making" }
+    ]
   }
 ]

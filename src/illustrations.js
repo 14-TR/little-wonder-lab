@@ -1,4 +1,15 @@
 // Original SVG field-notebook drawings. No image requests or third-party assets.
+import { patternModel } from './models.js';
+
+export const patternSymbols = Object.freeze({
+  leaf: '<path d="M12 45Q4 10 47 7Q55 47 12 45Z" fill="#becda6"/><path d="M8 51L40 16M19 39L17 25M27 30L40 30" fill="none"/>',
+  flower: '<path d="M30 18C14-4 0 21 18 29C-3 41 19 60 30 42C40 63 63 41 43 30C65 18 42-3 30 18Z" fill="#d88969"/><circle cx="30" cy="30" r="7" fill="#f4dea2"/>',
+  blank: '<rect x="6" y="6" width="48" height="48" rx="10" fill="none" stroke-dasharray="4 4"/><text x="30" y="40" text-anchor="middle" font-family="Georgia,serif" font-size="30" stroke="none" fill="#293f32">?</text>',
+});
+const patternScene = ['AB', 'AAB'].map((mode, row) => {
+  const model = patternModel(mode, 5);
+  return `<g transform="translate(76 ${row * 136 + 59})"><text x="0" y="-13" fill="#293f32" font-family="Georgia,serif" font-size="20">${mode} · ${model.unit.join(', ')}</text>${[...model.sequence, 'blank'].map((symbol, index) => `<g transform="translate(${index * 75} 0)" stroke="#344e3d" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${patternSymbols[symbol]}</g>`).join('')}</g>`;
+}).join('');
 const hand = 'M-13 27l-11-21q-4-8 1-10 5-2 10 9l1-29q0-9 5-9t5 9v15l2-30q1-8 6-7t4 8l-1 29 3-24q1-8 6-7t3 9l-3 25 4-14q2-8 6-6t2 10l-4 24q-1 12-12 20v10h-23z';
 const sprig = `<g fill="none" stroke="#526f4a" stroke-width="2.5" stroke-linecap="round"><path d="M520 296q-4-47 23-86M523 269q-26-8-26-28 24 2 26 28M528 250q27-2 33-25-24-2-33 25M538 226q-6-22 7-38 12 22-7 38"/></g>`;
 const lines = `<path d="M48 312q227 7 510-1M70 322l39 1m300 0 103-1" fill="none" stroke="#66705a" stroke-width="1.5" opacity=".4"/>`;
@@ -36,11 +47,11 @@ const bridgeScene = `
   <g fill="none" stroke="#b74427" stroke-width="1.8" stroke-linecap="round"><path d="M252 127l-9-18m27 13-1-19m21 20 8-16M346 153q43-13 53-36m-10 3 10-3 0 12"/></g>
   <text x="319" y="99" font-family="Georgia, serif" font-size="17" font-style="italic" fill="#53624e" transform="rotate(-5 319 99)">two folds. big ideas.</text>${sprig}${lines}`;
 
-const scenes = { shadows: shadowScene, ramps: rampScene, bridges: bridgeScene };
+const scenes = { shadows: shadowScene, ramps: rampScene, bridges: bridgeScene, patterns: patternScene };
 export const illustrationKinds = Object.freeze(Object.keys(scenes));
 export function illustration(kind) {
   if (!Object.hasOwn(scenes, kind)) throw new TypeError(`Unsupported illustration kind: ${kind}`);
-  const names = { shadows: 'An open hand makes a bigger waving shadow in a fixed desk lamp beam', ramps: 'A red toy car rolls down a gentle cardboard ramp resting on two books', bridges: 'A paper bridge with two upright folded sides spans two books and carries one full-size plastic spoon' };
+  const names = { shadows: 'An open hand makes a bigger waving shadow in a fixed desk lamp beam', ramps: 'A red toy car rolls down a gentle cardboard ramp resting on two books', bridges: 'A paper bridge with two upright folded sides spans two books and carries one full-size plastic spoon', patterns: 'Drawn paths: AB repeats leaf, flower; AAB repeats leaf, leaf, flower. Each has five drawings and a blank.' };
   return `<svg class="illustration" viewBox="0 0 600 350" role="img" aria-label="${names[kind]}" xmlns="http://www.w3.org/2000/svg">${scenes[kind]}</svg>`;
 }
 

@@ -1,4 +1,4 @@
-export const SUPPORTED_KINDS = Object.freeze(['shadows', 'ramps', 'bridges']);
+export const SUPPORTED_KINDS = Object.freeze(['shadows', 'ramps', 'bridges', 'patterns']);
 const topics = new Set(['Science', 'Technology', 'Engineering', 'Math']);
 const isText = value => typeof value === 'string' && value.trim().length > 0;
 const isObject = value => value !== null && typeof value === 'object' && !Array.isArray(value);
