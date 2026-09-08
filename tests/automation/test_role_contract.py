@@ -63,6 +63,17 @@ class RoleContractTests(unittest.TestCase):
         self.assertFalse(admitted(budget['Selection'] + 0.001, 360))
         self.assertFalse(admitted(65, 360.001), 'planner window remains bounded')
 
+    def test_recovery_binds_pr_before_calling_strict_merge_helper(self):
+        lead = (ROOT / 'automation/roles/lead.md').read_text()
+        self.assertIn('If the pending checkpoint lacks `pr`', lead)
+        self.assertIn('before `recover-merged`', lead)
+        self.assertIn('Never call scripts/reconcile_completed.py from a supervised attempt', lead)
+        docs = (ROOT / 'docs/AUTONOMY.md').read_text()
+        for text in (lead, docs):
+            self.assertIn('owner-only reconciliation', text)
+            self.assertIn('evidence-<sha>.json', text)
+            self.assertIn('public text or dates', text)
+
     def test_new_item_can_receive_a_planner_chosen_lesson_id(self):
         for relative in ('automation/roles/lead.md', 'automation/roles/planner.md'):
             text = (ROOT / relative).read_text()
