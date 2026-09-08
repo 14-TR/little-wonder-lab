@@ -68,20 +68,22 @@ def reconcile_completed(root, intent, *, api=None, verify=None):
                         pr['base']['sha'] != intent['base'] or receipt['merge_sha'] != intent['merge_sha']):
                     raise Blocked('existing publication does not match exact authorized SHAs')
                 return pr
-            pr = check_pr()
-            if not quality_green(api, intent['sha'], pr['head']['ref']):
-                raise Blocked('original exact-SHA quality workflow/job must be successful')
-            status = api(f"repos/{REPO}/commits/{intent['sha']}/status")
-            reviews = [s for s in status['statuses'] if s['context'] == 'independent-review']
-            if (status.get('sha') != intent['sha'] or not reviews or
-                    max(reviews, key=lambda s: s['id'])['state'] != 'success'):
-                raise Blocked('original exact-SHA independent-review status must be successful')
-            if not deployed(api, intent['merge_sha']):
-                raise Blocked('matching Pages deployment is not successful')
+            def check_publication():
+                pr = check_pr()
+                if not quality_green(api, intent['sha'], pr['head']['ref']):
+                    raise Blocked('original exact-SHA quality workflow/job must be successful')
+                status = api(f"repos/{REPO}/commits/{intent['sha']}/status")
+                reviews = [s for s in status['statuses'] if s['context'] == 'independent-review']
+                if (status.get('sha') != intent['sha'] or not reviews or
+                        max(reviews, key=lambda s: s['id'])['state'] != 'success'):
+                    raise Blocked('original exact-SHA independent-review status must be successful')
+                if not deployed(api, intent['merge_sha']):
+                    raise Blocked('matching Pages deployment is not successful')
+            check_publication()
             live = verify(root, intent['merge_sha'], intent['lesson_id'])
             if live.get('passed') is not True or live.get('sha') != intent['merge_sha']:
                 raise Blocked('matching live browser verification required')
-            check_pr()
+            check_publication()
             check_worktree()
             stamp = datetime.now(timezone.utc).isoformat()
             prefix = location / f"owner-completed-{item}-{intent['merge_sha']}"
@@ -117,6 +119,10 @@ def reconcile_completed(root, intent, *, api=None, verify=None):
                 if (store.pending() != old or
                         store.db.execute("SELECT 1 FROM attempts WHERE status='running'").fetchone()):
                     raise Blocked('pending state changed during verification; archive retained, nothing cleared')
+                # Revalidate after slow browser/archive operations. These observations
+                # are not atomic with GitHub or arbitrary external worktree writers.
+                check_publication()
+                check_worktree()
                 store.db.execute('DELETE FROM checkpoint WHERE singleton=1')
             if store.pending():
                 raise Blocked('completed checkpoint clearing did not read back')

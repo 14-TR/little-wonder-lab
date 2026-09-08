@@ -68,6 +68,11 @@ class RoleContractTests(unittest.TestCase):
         self.assertIn('If the pending checkpoint lacks `pr`', lead)
         self.assertIn('before `recover-merged`', lead)
         self.assertIn('Never call scripts/reconcile_completed.py from a supervised attempt', lead)
+        docs = (ROOT / 'docs/AUTONOMY.md').read_text()
+        for text in (lead, docs):
+            self.assertIn('owner-only reconciliation', text)
+            self.assertIn('evidence-<sha>.json', text)
+            self.assertIn('public text or dates', text)
 
     def test_new_item_can_receive_a_planner_chosen_lesson_id(self):
         for relative in ('automation/roles/lead.md', 'automation/roles/planner.md'):

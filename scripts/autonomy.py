@@ -10,7 +10,7 @@ from autonomy_state import Blocked, Store
 from autonomy_runtime import run_lock, bounded_run, unresolved_guard, clear_after_success
 from autonomy_cleanup import cleanup_successful_worktrees, owned_worktree_root
 from autonomy_release import Git, GitHub, command, release
-from autonomy_policy import REPO, allowed_path, item_id, pages, scan_requests, sha40, validate_changes
+from autonomy_policy import REPO, allowed_path, item_id, pages, scan_requests, sha40, validate_changes, validate_release
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -154,6 +154,31 @@ def deployed(api, sha):
     return latest['status'] == 'completed' and latest['conclusion'] == 'success'
 
 
+def autonomous_recovery_receipt(location, old, pr):
+    """Require canonical evidence saved AFTER the protected merge read-back.
+
+    A checkpoint or public marker alone is not autonomous publication provenance.
+    This trusts the private operator state directory, not caller evidence_file paths.
+    """
+    try:
+        receipt = merged_receipt(pr, old['item'])
+        sha, base = sha40(pr['head']['sha']), sha40(pr['base']['sha'])
+        if (old.get('pr') != pr['number'] or old.get('sha') != sha or old.get('base') != base or
+                old.get('reviewed_sha', sha) != sha or
+                old.get('merge_sha', receipt['merge_sha']) != receipt['merge_sha']):
+            raise Blocked('checkpoint differs from the saved release')
+        proof = location / ('evidence-' + sha + '.json')
+        if proof.is_symlink() or not proof.is_file():
+            raise Blocked('canonical supervised merge evidence missing')
+        evidence = json.loads(proof.read_text())
+        # Reuse the strict historical identity/review schema, not an assertion
+        # that the closed PR is currently open or that current CI is successful.
+        validate_release({**pr, 'state': 'open', 'draft': False}, evidence, base, quality=True)
+        return {**receipt, 'reviewed_sha': sha}
+    except (Blocked, OSError, ValueError, KeyError, TypeError) as exc:
+        raise Blocked('autonomous release provenance missing or ambiguous; STOP for owner-only reconciliation') from exc
+
+
 def main(argv=None, root=ROOT):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('action', choices=['run', 'gate', 'status', 'checkpoint', 'stamp', 'scan', 'prepare', 'check-local', 'merge', 'recover-merged', 'verify-live'])
@@ -207,7 +232,7 @@ def main(argv=None, root=ROOT):
                 raise Blocked('checkpoint the exact PR number before releasing')
             api = GitHub(root)
             if args.action == 'recover-merged':
-                receipt = merged_receipt(api(f'repos/{REPO}/pulls/{args.pr}'), item)
+                receipt = autonomous_recovery_receipt(location, old, api(f'repos/{REPO}/pulls/{args.pr}'))
             else:
                 evidence = json.loads(args.file.read_text())
                 receipt_file = location / ('evidence-' + sha40(evidence['sha']) + '.json')
@@ -221,7 +246,7 @@ def main(argv=None, root=ROOT):
             if old.get('stage') != 'merged' or not args.lesson or old.get('lesson_id') != args.lesson:
                 raise Blocked('matching merged checkpoint and planned lesson ID required')
             api = GitHub(root)
-            receipt = merged_receipt(api(f"repos/{REPO}/pulls/{old['pr']}"), old['item'])
+            receipt = autonomous_recovery_receipt(location, old, api(f"repos/{REPO}/pulls/{old['pr']}"))
             if receipt['merge_sha'] != old.get('merge_sha') or not deployed(api, receipt['merge_sha']):
                 raise Blocked('matching Pages deployment is not successful yet')
             live = json.loads(command(['node', str(root / 'scripts/verify-live.mjs'), receipt['merge_sha'], args.lesson], root, timeout=120))

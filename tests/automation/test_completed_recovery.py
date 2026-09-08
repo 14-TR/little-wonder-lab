@@ -154,6 +154,11 @@ class CompletedPublicationTests(unittest.TestCase):
 
     def test_documented_supervised_checkpoint_then_recover_sequence(self):
         import autonomy as a
+        from test_release_boundary import evidence
+        # Canonical evidence saved by a completed supervised merge, before its
+        # checkpoint write. Public PR text and caller-supplied evidence_file do not suffice.
+        proof = self.state / ('evidence-' + self.intent['sha'] + '.json')
+        proof.write_text(json.dumps(evidence(self.intent['sha'], self.intent['base'])))
         attempt = self.store.begin('2026-09-09')
         binding = {**self.pending, 'pr': 7, 'sha': self.intent['sha']}
         path = self.state/'binding.json'
@@ -170,7 +175,68 @@ class CompletedPublicationTests(unittest.TestCase):
         self.assertEqual(self.store.pending()['merge_sha'], self.intent['merge_sha'])
         self.assertEqual(self.store.pending()['blocker'], self.pending['blocker'])
         self.assertEqual(self.store.db.execute('SELECT * FROM releases').fetchall(), [])
-        self.store.finish(attempt, 'blocked')
+        with patch.dict(os.environ, {'LWL_ATTEMPT': str(attempt)}), patch.object(a, 'GitHub', lambda _: self.api), \
+                patch.object(a, 'today', return_value='2026-09-09'), \
+                patch.object(a, 'command', side_effect=self.offline_live_command):
+            a.main(['verify-live', '--lesson', 'pattern-path'], root=self.root)
+        self.assertEqual(self.store.pending(), {})
+        self.assertEqual(self.store.db.execute('SELECT day, attempt FROM releases').fetchall(), [('2026-09-09', attempt)])
+        self.assertEqual(self.store.db.execute('SELECT * FROM attempts WHERE id < ?', (attempt,)).fetchall(), self.attempts)
+
+    def offline_live_command(self, argv, cwd, timeout=60):
+        from autonomy_release import command
+        if argv[0] == 'node':
+            self.assertEqual(argv[2:], [self.intent['merge_sha'], self.intent['lesson_id']])
+            return json.dumps(self.live)
+        return command(argv, cwd, timeout=timeout)
+
+    def test_historical_or_ambiguous_binding_cannot_award_daily_success(self):
+        import autonomy as a
+        self.pr['merged_at'] = '2026-09-07T18:00:00Z'
+        attempt = self.store.begin('2026-09-09')
+        binding = {**self.pending, 'pr': 7, 'sha': self.intent['sha']}
+        path = self.state / 'binding.json'
+        path.write_text(json.dumps(binding))
+        with patch.dict(os.environ, {'LWL_ATTEMPT': str(attempt)}), patch.object(a, 'GitHub', lambda _: self.api), \
+                patch.object(a, 'today', return_value='2026-09-09'), \
+                patch.object(a, 'command', side_effect=self.offline_live_command):
+            a.main(['checkpoint', '--file', str(path)], root=self.root)
+            with self.assertRaisesRegex(Blocked, 'owner-only reconciliation'):
+                a.main(['recover-merged', '--pr', '7'], root=self.root)
+                a.main(['verify-live', '--lesson', 'pattern-path'], root=self.root)
+        self.assertEqual(self.store.pending(), binding)
+        self.assertEqual(self.store.db.execute('SELECT * FROM releases').fetchall(), [])
+        self.assertEqual(self.store.db.execute('SELECT * FROM attempts WHERE id < ?', (attempt,)).fetchall(), self.attempts)
+        self.assertEqual(self.store.db.execute('SELECT status FROM attempts WHERE id=?', (attempt,)).fetchone(), ('running',))
+
+    def test_fabricated_merged_checkpoint_cannot_bypass_local_provenance(self):
+        import autonomy as a
+        from test_release_boundary import evidence
+        attempt = self.store.begin('2026-09-09')
+        binding = {**self.pending, 'pr': 7, 'sha': self.intent['sha'],
+                   'merge_sha': self.intent['merge_sha'], 'stage': 'merged'}
+        proof = self.state / ('evidence-' + self.intent['sha'] + '.json')
+        valid = evidence(self.intent['sha'], self.intent['base'])
+        external = self.state / 'caller-evidence.json'
+        external.write_text(json.dumps(valid))
+        binding['evidence_file'] = str(external)
+        self.store.checkpoint(attempt, binding)
+        variants = [None, '{', json.dumps({}), json.dumps({**valid, 'sha': 'd'*40}),
+                    json.dumps({**valid, 'base': 'e'*40}),
+                    json.dumps({**valid, 'reviews': []}), 'symlink']
+        for value in variants:
+            with self.subTest(proof=value):
+                if value == 'symlink':
+                    proof.unlink()
+                    proof.symlink_to(external)
+                elif value is not None:
+                    proof.write_text(value)
+                with patch.dict(os.environ, {'LWL_ATTEMPT': str(attempt)}), patch.object(a, 'GitHub', lambda _: self.api), \
+                        patch.object(a, 'command', side_effect=self.offline_live_command), \
+                        self.assertRaisesRegex(Blocked, 'owner-only reconciliation'):
+                    a.main(['verify-live', '--lesson', 'pattern-path'], root=self.root)
+                self.assertEqual(self.store.pending(), binding)
+                self.assertEqual(self.store.db.execute('SELECT * FROM releases').fetchall(), [])
 
     def test_candidate_branch_head_path_and_untracked_changes_remain_pending(self):
         (self.worktree/'new-draft').write_text('retain me')
@@ -204,6 +270,70 @@ class CompletedPublicationTests(unittest.TestCase):
         self.live['sha'] = 'c'*40
         self.live['passed'] = False
         self.assert_blocked_unchanged()
+
+    def test_release_gates_revoked_during_browser_or_archive_preserve_pending(self):
+        for boundary in ('browser', 'archive'):
+            for gate in ('quality', 'independent-review', 'deployment'):
+                with self.subTest(boundary=boundary, gate=gate):
+                    f = CompletedPublicationTests()
+                    f.setUp()
+                    try:
+                        def revoke():
+                            if gate == 'quality':
+                                f.quality = False
+                            elif gate == 'deployment':
+                                f.deploy = False
+                            else:
+                                f.status['statuses'].append({'id': 2, 'context': gate, 'state': 'failure'})
+                        def browser(root, sha, lesson):
+                            if boundary == 'browser':
+                                revoke()
+                            return f.live
+                        original = os.open
+                        def archive(path, flags, *args, **kwargs):
+                            if boundary == 'archive' and str(path).endswith('.sqlite3'):
+                                revoke()
+                            return original(path, flags, *args, **kwargs)
+                        with patch.object(f.helper.os, 'open', archive), self.assertRaises(Blocked):
+                            f.helper.reconcile_completed(f.root, f.intent, api=f.api, verify=browser)
+                        self.assertEqual(f.store.pending(), f.pending)
+                        self.assertEqual(f.store.db.execute('SELECT * FROM attempts').fetchall(), f.attempts)
+                        self.assertEqual(f.store.db.execute('SELECT * FROM releases').fetchall(), [])
+                        self.assertEqual(len(list(f.state.glob('owner-completed-*'))), 2 if boundary == 'archive' else 0)
+                    finally:
+                        f.doCleanups()
+
+    def test_worktree_changes_during_archival_preserve_checkpoint_and_archives(self):
+        for change in ('dirty', 'head', 'branch', 'identity'):
+            with self.subTest(change=change):
+                f = CompletedPublicationTests()
+                f.setUp()
+                try:
+                    original = os.open
+                    def archive(path, flags, *args, **kwargs):
+                        if str(path).endswith('.json') and Path(path).name.startswith('owner-completed-'):
+                            if change == 'dirty':
+                                (f.worktree / 'lesson').write_text('retained human edit')
+                            elif change == 'head':
+                                f.git(f.worktree, '-c', 'user.name=Test', '-c', 'user.email=test@example.invalid',
+                                      'commit', '--allow-empty', '-qm', 'new head')
+                            elif change == 'branch':
+                                f.git(f.worktree, 'switch', '-c', 'human-draft')
+                            else:
+                                moved = f.worktree.with_name('retained-worktree')
+                                f.git(f.root, 'worktree', 'move', str(f.worktree), str(moved))
+                                f.worktree.symlink_to(moved, target_is_directory=True)
+                        return original(path, flags, *args, **kwargs)
+                    with patch.object(f.helper.os, 'open', archive), self.assertRaises(Blocked):
+                        f.reconcile()
+                    self.assertEqual(f.store.pending(), f.pending)
+                    self.assertEqual(len(list(f.state.glob('owner-completed-*'))), 2)
+                    self.assertEqual(f.store.db.execute('SELECT * FROM attempts').fetchall(), f.attempts)
+                    self.assertEqual(f.store.db.execute('SELECT * FROM releases').fetchall(), [])
+                    with self.assertRaises(Blocked):
+                        f.reconcile()
+                finally:
+                    f.doCleanups()
 
 
 if __name__ == '__main__':

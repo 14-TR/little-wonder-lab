@@ -126,6 +126,55 @@ class ReleaseBoundaryTests(unittest.TestCase):
         self.assertEqual([x for x in api.writes if x[1] == 'PUT'], [])
         self.assertIsNotNone(caught)
 
+    def test_cli_saved_merge_evidence_survives_checkpoint_and_live_interruptions(self):
+        api = FixtureAPI(self.sha, self.base, self.files)
+        location = a.state_dir(self.root)
+        store = a.Store(location / 'state.sqlite3')
+        self.addCleanup(store.close)
+        attempt = store.begin('2026-09-09')
+        checkpoint = {'item': 'request-1', 'pr': 1, 'stage': 'reviewed',
+                      'sha': self.sha, 'base': self.base, 'lesson_id': 'one'}
+        store.checkpoint(attempt, checkpoint)
+        source = Path(self.tmp.name) / 'review.json'
+        ev = evidence(self.sha, self.base)
+        source.write_text(json.dumps(ev))
+        proof = location / ('evidence-' + self.sha + '.json')
+        original_command = a.command
+        def offline_command(argv, cwd, timeout=60):
+            if argv[0] == 'node':
+                self.assertEqual(argv[2:], [self.sha, 'one'])
+                return json.dumps({'passed': True, 'sha': self.sha, 'lesson_id': 'one'})
+            return original_command(argv, cwd, timeout=timeout)
+        def offline_api(endpoint, method='GET', data=None):
+            if 'deploy.yml/runs?' in endpoint:
+                return {'workflow_runs': [{'id': 20, 'head_sha': self.sha, 'head_branch': 'main',
+                        'event': 'workflow_run', 'status': 'completed', 'conclusion': 'success'}]}
+            return api(endpoint, method, data)
+        with patch.dict(os.environ, {'LWL_ATTEMPT': str(attempt)}), \
+                patch.object(a, 'GitHub', return_value=offline_api), \
+                patch.object(a, 'today', return_value='2026-09-09'), \
+                patch.object(a, 'command', side_effect=offline_command), contextlib.redirect_stdout(io.StringIO()):
+            # Real protected release helper, offline API and local Git only.
+            # Evidence is saved after merge read-back, before checkpointing.
+            with patch.object(a.Store, 'checkpoint', side_effect=OSError('interrupted checkpoint')), \
+                    self.assertRaisesRegex(OSError, 'interrupted checkpoint'):
+                a.main(['merge', '--pr', '1', '--file', str(source)], root=self.root)
+            self.assertTrue(api.merged)
+            self.assertEqual(json.loads(proof.read_text()), ev)
+            self.assertEqual(store.pending(), checkpoint)
+            a.main(['recover-merged', '--pr', '1'], root=self.root)
+            with patch.object(a.Store, 'finish', side_effect=OSError('interrupted live receipt')), \
+                    self.assertRaisesRegex(OSError, 'interrupted live receipt'):
+                a.main(['verify-live', '--lesson', 'one'], root=self.root)
+            self.assertEqual(store.pending()['stage'], 'live')
+            self.assertEqual(store.db.execute('SELECT * FROM releases').fetchall(), [])
+            a.main(['recover-merged', '--pr', '1'], root=self.root)
+            a.main(['verify-live', '--lesson', 'one'], root=self.root)
+        self.assertEqual(store.pending(), {})
+        self.assertEqual(store.db.execute('SELECT day, attempt FROM releases').fetchall(), [('2026-09-09', attempt)])
+        self.assertEqual(len([call for call in api.writes if call[1] == 'PUT']), 1)
+        self.assertEqual(json.loads(proof.read_text()), ev)
+
     def test_reviewed_binary_blob_blocks_writes_even_with_text_worktree(self):
         (self.root / 'public').mkdir()
         image = self.root / 'public/image.bin'
