@@ -148,6 +148,22 @@ Only after establishing that the prior run's tools have ended, archive `unresolv
 - **Timeout, two failures, changed protected paths, denied approvals, missing CLI/auth, unavailable sources, unsafe request or incomplete scan:** stop and preserve evidence. Never weaken rules to meet the daily target.
 - **Stop scheduling:** `hermes --profile default cron pause DAILY_ID` and separately `... pause RECOVERY_ID`, then read back `cron list`. To stop an active run, interrupt its supervisor; inspect for surviving project-owned tools before resuming. Do not kill unrelated processes, alter unrelated jobs, or remove a live lock file.
 
+## Reconciling an owner-published pending item
+
+An interactive owner publication can finish outside the daily supervisor while intentionally preserving its failed attempt ledger. That must not leave an already-published item perpetually pending or turn it into a new day's contribution. Before retrying, inspect the exact remote PR, item marker, candidate/base/merge SHAs and canonical checkpoint. A missing PR binding is a prerequisite, not permission to weaken `recover-merged`: an ordinary active lead must use `checkpoint` to bind the observed matching PR before calling it. A missing marker requires separately authorized operator correction after identity/review verification; the routine lead must not add one retrospectively.
+
+For a fully reviewed, already merged **and currently live** owner-directed publication, the owner may explicitly authorize `scripts/reconcile_completed.py`. This is **not a cron command, a new supervised attempt or a way to meet today's target**. First follow the abnormal-process reconciliation procedure above; it refuses any unresolved marker, held lock, running attempt or supervised `LWL_ATTEMPT` environment. Preserve the existing pending worktree. Do not invoke it merely because an attempt limit was reached.
+
+Create a private trusted intent JSON with exact `item`, integer `pr`, `lesson_id`, lowercase 40-character `sha`, `base`, `merge_sha`, and a nonempty `authorization` describing the explicit owner request. Do not source authorization from public issue/PR text. Run from the canonical operator checkout:
+
+```sh
+python3 scripts/reconcile_completed.py --authorize-existing-publication --file /absolute/private/owner-intent.json
+```
+
+Under the same kernel lock it requires a matching pending item/lesson, a clean unchanged same-repository owned worktree, exact trusted merged PR, original successful Quality workflow/job and latest exact-SHA independent-review status, matching successful Pages deployment and fresh real live-browser verification. It makes no GitHub writes, launches no model, skips no approval or CI gate, and does not change source/worktrees. It saves a SQLite backup (including WAL) and full historical checkpoint/live receipt privately before clearing only that completed checkpoint. All attempt and daily release rows remain unchanged. It does **not** mark the old failed engineer complete, claim a new contribution, restore quota, remove quarantine or clean worktrees. Partial/existing archive artifacts, new dirty work, stale deployment or verification failure stop for inspection, not an automatic retry. Read `status` afterward: today's exhausted attempt count must remain exhausted; future work is no longer stuck on the completed item.
+
+This path repairs bookkeeping after an owner publication, not planner/engineer latency. A successful historical reconciliation is not proof of a fresh request-to-lesson autonomous cycle; that still requires a separate bounded run and all independent release gates.
+
 ## Operator retention maintenance
 
 Implementation worktrees live under the ignored `/Users/tr/little-wonder-lab/.autonomy-worktrees/ITEM`, **not** inside Git metadata. The canonical `.git/autonomy/` location is only for private state/evidence. Vite's default `**/.git/**` protection correctly refuses serving the legacy `.git/autonomy/worktrees/ITEM` layout; leave Vite's deny list intact. Existing legacy paths/receipts are not auto-migrated or deleted: pause both jobs, reconcile processes, hold the run lock, back up the checkpoint, and use `git worktree move` plus an exact checkpoint-path update as reviewed operator maintenance before resuming. Preserve attempt counts and failure history.
