@@ -15,12 +15,13 @@ Science asks what happens and why. Math gives ways to describe and compare. Engi
 | 1 | `shadow-detective` | Science | Notice a change; predict before looking | No earlier lesson needed |
 | 2 | `ramp-racers` | Science | Change one setup feature; compare repeated observations | Shadow Detective's careful noticing |
 | 3 | `paper-bridge` | Engineering | Compare designs with the same test load | Ramp Racers' fair comparison |
+| 4 | `pattern-path` | Math | Identify a repeating unit; predict and explain with AB/AAB rules | Shadow Detective's noticing and predicting, recapped in this lesson |
 
-All three routes remain open. An `order` value sorts the catalog; a `prerequisites` edge explains a connection. Neither means a child has completed, understood, failed, or needs permission to access anything.
+All lesson routes remain open. An `order` value sorts the catalog; a `prerequisites` edge explains a connection. Neither means a child has completed, understood, failed, or needs permission to access anything.
 
-## Current requested candidate
+## Requested lesson implementation
 
-The project owner's starter request, **GitHub issue #2: Pattern Path — AB/AAB nature patterns**, is the next requested-topic candidate, ahead of the default measurement brief below. This issue context was supplied by the coordinating agent; the next publishing cycle must still read the live issue and all comments, check eligibility, and verify the finished lesson. It has **not** been implemented by this content pass. Use drawn nature symbols rather than collecting berries, seeds, or other small objects, and distinguish a deliberately arranged repeating pattern from a claim that all natural forms repeat. A new pattern interaction must be supported before its lesson is published.
+Implemented **2026-09-07** (live America/Denver date): the project owner's starter **GitHub issue #2, Pattern Path**, not a family submission. The complete supplied issue snapshot has no comments. The lesson adds fixed botanical AB/AAB repeats, three additions, kind rule explanations, explicit advance, restart/switching, keyboard access and standalone printable examples. It uses drawn symbols, not collected plants or small pieces, and distinguishes arranged rules from plant growth. This records implementation scope, not deployment success. **Footstep-Free Measuring (`measure-the-road`) remains the next default brief**, subject to eligible requests and safety/access repairs.
 
 ## Proposed next sequence
 
@@ -42,7 +43,7 @@ These are planning briefs. Each needs its own source review, safety review, comp
 | --- | --- | --- | --- |
 | **Fold-Over Friends** (`symmetry-studio`) | Math | Which large drawn shapes match when folded along a chosen line? Predict and compare a symmetric and an asymmetric drawing. | Connect a physical fold to reflection symmetry; clarify that “two halves” need not automatically be matching halves. No scissors needed. |
 | **The Spoon Shelter** (`paper-shelter`) | Engineering | Which of two folded-paper roof shapes meets a stated need for the same lightweight model guest? Compare using the same paper and span. | Revisit `paper-bridge`; state the design goal before testing. A new load, paper type, and span must not all change at once. |
-| **Pattern Post Office** (`pattern-post`) | Math | Which repeating unit makes this whole pattern? Compare two drawn sequences, identify the repeat, and explain the next part. | Use large drawn symbols, not beads or other small manipulatives. Prepare for loops without claiming that every sequence repeats. |
+| **Pattern Post Office** (`pattern-post`) | Math | Can different symbols follow the same rule? Compare equivalent repeat structures represented with different drawings. | Extend `pattern-path` beyond next-symbol prediction to recognizing equivalent rules. Use large drawn symbols, not small pieces; future work needs its own review. |
 
 **Why this phase:** paper geometry becomes a visible design choice. The initial bridge background connects cross-sectional shape with resistance to bending.[4] Treat the proposed shelter as a new question requiring testing, not proof that every folded shape is better.
 
@@ -87,7 +88,7 @@ Keep selection reasons brief and public-safe: “Adds equal-unit measurement aft
 - `src/data/lessons.json` is the single published lesson array. Keep exact field names and value types from `CONTRACT.md`; do not add a `mastery`, `unlock`, `child`, `score`, or private-profile field.
 - New lessons receive stable unique slugs and a deliberate catalog order. Preserve an existing lesson's `published` date as its original publication date; a substantial revision can be documented in the normal public change history without making it look newly published.
 - `prerequisites` must reference already included lessons and form an acyclic suggested sequence. Explain the useful connection in `parentNote`; recap the needed idea inside the lesson. Never require a device-local completion mark to open a route.
-- Current interaction kinds are `shadows`, `ramps`, and `bridges`. Do not label a coding or measuring lesson with one merely to make validation pass. Coordinate a new supported `kind` with the frontend and tests before publishing that lesson. Until then, choose a suitable substantive improvement or an actually supported topic.
+- Current interaction kinds are `shadows`, `ramps`, `bridges`, and `patterns`. The patterns kind is fixed AB/AAB repeating units, not a general editor. Do not label a coding or measuring lesson with one merely to make validation pass. Coordinate new kinds with frontend tests before publication.
 - Keep separate claims separate: **published content**, **illustrated model output**, **real physical observation**, and **optional device-local explored mark** are not interchangeable.
 - Illustrations should reveal the variable, controls, and observed quantity. Decorative motion is not a science experiment. Fictional sample data must be labeled as such; never present synthetic data as measured child results.
 

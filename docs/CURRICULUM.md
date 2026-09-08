@@ -2,6 +2,8 @@
 
 Content reviewed: **2026-09-06**, using the author's live local date (MDT, UTC−06:00).
 
+Pattern Path added **2026-09-07**, using the live America/Denver date. Existing lesson publication dates and science guidance are unchanged.
+
 ## Purpose and boundaries
 
 An inviting field notebook for a child around seven: ask a question, make a prediction, try a fair comparison, notice evidence, and explain or redesign. The first three lessons are original activities, not copies of linked lesson plans. The sources support the science; their materials and age ranges are not automatically recommendations for this site.
@@ -9,6 +11,8 @@ An inviting field notebook for a child around seven: ask a question, make a pred
 This is an editorial curriculum, not an assessment system, a complete school course, or a claim about any particular child's development. Reading aloud, pointing, drawing, dictating, and simply watching are equally welcome. A grown-up may do the moving or folding while the child makes decisions. No task requires writing, timed reading, a correct first prediction, or buying materials. Each lesson can be explored on screen; the household investigation is optional. Screen exploration is a model, not evidence that a physical experiment occurred.
 
 The suggested duration is **18, 18, and 20 minutes** respectively, including basic setup. Pausing, stopping early, or returning tomorrow is fine. Optional challenges and repeat bridge builds can take additional time.
+
+Pattern Path adds an optional **15-minute** Math visit. This duration and its paper adaptation are editorial estimates, not trial findings.
 
 ## Initial lesson map
 
@@ -21,6 +25,20 @@ The suggested duration is **18, 18, and 20 minutes** respectively, including bas
 The stored chain is `shadow-detective` → `ramp-racers` → `paper-bridge`: noticing a change → making a fair comparison → using a comparison to choose a design. `prerequisites` expresses that pedagogical connection only. **Do not lock routes, label a child behind, or infer mastery from this chain.** Each lesson also names its own fair-test rules, so it can stand alone.
 
 ## Scientific grounding and implementation notes
+
+### Math branch: Pattern Path / `pattern-path`
+
+Optional connection: `shadow-detective` → `pattern-path`, noticing what is present and predicting before checking. This is recapped within the lesson and never locks a route.
+
+| Main question | Change deliberately | Keep the same | Compare | Reflection |
+| --- | --- | --- | --- | --- |
+| Which drawing comes next? | AB (leaf, flower) versus AAB (leaf, leaf, flower) | Same two drawn symbols; same order within each chosen unit | Identify each whole repeat, then add three drawings | Point, speak, dictate, or draw the unit and explain a choice |
+
+This is comparison of deliberately arranged mathematical rules, not an empirical fair test. A fixed unit determines every drawing exactly; it does not measure plant growth or imply that all plants repeat. The science lessons retain their controlled-comparison requirements. Screen-only access needs no materials. Paper play uses a full sheet and a grown-up-checked large intact crayon, with no cutting, collecting or small-object activities.
+
+NRICH's Pattern Making public-body excerpts support copying/continuing AB, progressing to longer repeats, continuing whole units, asking for the rule, and recording with invented symbols.[11] Developing Pattern Awareness defines repeated AB/ABC/ABB sequences and asks for the pattern rule.[12] Relevant retrieved excerpts were read; omitted sections were not. Our AAB botanical unit is an original adaptation, checked position by position in the model tests, not a source-attributed AAB activity. Neither source validates our duration, household adaptation or developmental outcomes.
+
+The interaction offers fixed AB/AAB paths, five starting symbols and three additions, explanatory retries, explicit advance, restart and switching. Persistent native controls retain keyboard focus; sequence text and grouped drawings carry the same rule. No score, timer, stored answers or network activity is needed. Printed prediction copy supplies both unfinished paths independently of interactive state, together with all steps, safety and grown-up references.
 
 ### Shadows: light geometry, not a growing object
 
@@ -92,6 +110,7 @@ Before publishing a lesson or material revision:
 
 - Match `CONTRACT.md` exactly: lesson array; required field names, types, topic values, unique IDs/order, valid live-local publication date, existing prerequisite IDs, and supported `kind`.
 - Include an original, age-appropriate question, a prediction **before** results, a controlled comparison, reflection, safe listed materials, a screen-only option, and an honest model caveat.
+- For a rule-based Math lesson, compare clearly stated arranged rules rather than pretending to perform a physical experiment; retain prediction, explanation, reflection and access requirements.
 - Read source bodies or the relevant publicly visible source section; check that each source supports the particular claim. Never treat a redirected homepage or a search headline as full evidence.
 - Test the JSON, the illustrative cause/effect relationships, source links, accessibility, print presentation, and existing lesson routes. Physical outcomes and duration remain editorial estimates until someone actually trials the household adaptation; do not say they were experimentally verified by software.
 - Keep future drafts out of the published array until their lesson and interaction are complete. `kind` is an interaction contract, not a decoration tag.
@@ -110,3 +129,5 @@ References below support the named mechanisms, not claims that this particular 1
 [5] https://www.sciencebuddies.org/teacher-resources/lesson-plans/roller-coaster-kinetic-potential-energy — Science Buddies: Paper Roller Coasters — Kinetic and Potential Energy
 [9] https://www.scienceworld.ca/resource/supportive-shapes — Science World: Supportive Shapes
 [10] https://www.exploratorium.edu/education/ifi/watch-and-do/shadows — Exploratorium: Shadows
+[11] https://nrich.maths.org/eyfs-activities/pattern-making — NRICH: Pattern Making
+[12] https://nrich.maths.org/articles/developing-pattern-awareness-young-children — NRICH: Developing Pattern Awareness With Young Children
