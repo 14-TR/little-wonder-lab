@@ -2,7 +2,7 @@
 
 ## What runs
 
-Two Hermes cron **script-only** ticks share one small POSIX supervisor, not a bespoke agent framework. The supervisor reserves an attempt in SQLite, holds a kernel `flock`, and launches a real fresh default-profile Hermes lead. The lead uses bounded `delegate_task` stages with separate planner, engineer, code/accessibility reviewer and curriculum/safety reviewer contexts. It is not one model role-playing a team.
+Two Hermes cron **script-only** ticks share one small POSIX supervisor, not a bespoke agent framework. The supervisor reserves an attempt in SQLite, holds a kernel `flock`, and launches a real fresh default-profile Hermes lead. The lead uses fresh CLI role sessions through supervised `scripts/run_role.py`, with separate planner, engineer, code/accessibility reviewer and curriculum/safety reviewer contexts. It is not one model role-playing a team.
 
 The target is **one substantive, safe educational update per America/Denver day**. Quality wins over the target. A failed/blocked day stays visibly failed; no timestamp-only commits and no backlog of forced catch-up releases.
 
@@ -35,7 +35,11 @@ The current [cron docs](https://hermes-agent.nousresearch.com/docs/user-guide/fe
 
 Native cron's pre-run script timeout is currently 3600 seconds; the LLM uses a separate inactivity budget. Native `cron create` has no per-job CLI run-budget flag. Therefore the installed script is the whole cron job and launches the bounded lead using supported [`hermes chat` flags](https://hermes-agent.nousresearch.com/docs/reference/cli-commands). No global timeout/config changes are needed. The outer script normally ends within 2400 seconds. Both normal and recovery ticks use the same entrypoint and ledger. Do not use monitor-script hash suppression: a quiet request queue must still permit a meaningful roadmap update.
 
-`delegate_task` has genuinely fresh child contexts and runtime handles ([delegation docs](https://hermes-agent.nousresearch.com/docs/user-guide/features/delegation)). Children do not reliably know their session IDs. The lead binds verbatim reviewer results to the **observed runtime subagent_id** (`sa-…`) as `agent_id`; it uses its own real session ID supplied by `--pass-session-id` as `lead_agent_id`. Keep the raw runtime result privately with the evidence. Distinct handles are a fail-closed consistency check, not cryptographic proof of independence; never invent handles or verdicts.
+One-shot CLI leads do not consume asynchronous `delegate_task` callbacks. Use only the canonical `python3 /Users/tr/little-wonder-lab/scripts/run_role.py --file /absolute/spec.json` in finite FOREGROUND terminal calls. Separate reviewer calls can run in parallel; no detached shell jobs or polling for callbacks. Each spec directly under LWL_STATE supplies `role`, `item`, `base`, `worktree`, absolute epoch `deadline`, and trusted `context`; non-planners also supply checkpoint `lesson_id`, and reviewers supply exact `sha`. The active supervised attempt is required; this is not a quota-bypass command. Planner uses operator main; later roles use the exact checkpoint worktree/item/base.
+
+The helper injects REPORT_PATH and requires a compact JSON artifact (1200 words / 12000 UTF-8 bytes), followed by ONLY LWL_ROLE_COMPLETE. It waits for CLI exit zero and verifies the exact observed session ID, normal closed-session export, paired tool calls/results, marker, identity and role schema before recording completed.json. It does not normalize identifiers, accept dispatch handles as completion, or infer a passing review. Save started/process/exit/log/export/report receipts, including failures. A completed transport may contain an honest blocked report or failed review; the lead must still inspect ready/pass, full design/test/visual/source evidence and exact SHA/base. The lead attaches the observed CLI session ID unchanged as agent_id and its own actual session ID as lead_agent_id. Distinct IDs are consistency evidence, not cryptographic proof of independence. Missing/abnormal completion blocks the attempt and retains the existing supervisor quarantine; process-group cleanup cannot prove separate terminal descendants ended.
+
+All phase bounds include startup, final response and export. Engineer freezes implementation by 360 seconds, saves a complete report by 450, returns by 480, within the SAME 540-second allocation. Planner and reviewers save by 270 and return by 300 within 360 seconds. The final 60 seconds reserve transport, not extra implementation. Shorter absolute deadlines shorten work, never downstream gates or safe-stop reserves. These are transport and instruction contracts, not evidence that a real autonomous release succeeded.
 
 ## Operator installation — default profile only
 
@@ -125,15 +129,15 @@ Evidence JSON (placeholders must be replaced with real observed values):
   "sha": "40 lowercase hex characters from git rev-parse HEAD",
   "base": "40 lowercase hex characters for current main",
   "lead_agent_id": "actual lead session ID",
-  "engineer_agent_id": "actual runtime engineer subagent_id",
+  "engineer_agent_id": "actual observed engineer CLI session ID",
   "reviews": [
-    {"role":"code","agent_id":"actual code-review subagent_id","sha":"same exact head SHA","base":"same exact base SHA","passed":true,"security_concerns":[],"logic_errors":[],"curriculum_concerns":[],"substantive":true,"tests":["actual command and result"],"summary":"verdict"},
-    {"role":"curriculum","agent_id":"different actual curriculum-review subagent_id","sha":"same exact head SHA","base":"same exact base SHA","passed":true,"security_concerns":[],"logic_errors":[],"curriculum_concerns":[],"substantive":true,"tests":["actual sources/lesson checks and outcomes"],"summary":"verdict"}
+    {"role":"code","agent_id":"actual observed code-review CLI session ID","sha":"same exact head SHA","base":"same exact base SHA","passed":true,"security_concerns":[],"logic_errors":[],"curriculum_concerns":[],"substantive":true,"tests":["actual command and result"],"summary":"verdict"},
+    {"role":"curriculum","agent_id":"different observed curriculum-review CLI session ID","sha":"same exact head SHA","base":"same exact base SHA","passed":true,"security_concerns":[],"logic_errors":[],"curriculum_concerns":[],"substantive":true,"tests":["actual sources/lesson checks and outcomes"],"summary":"verdict"}
   ]
 }
 ```
 
-The parser rejects malformed SHA values rather than normalizing them. Every reviewer must pass explicitly with empty findings. Stale head/base invalidates both reviews. Persist full raw delegation responses beside evidence; the public PR needs a concise non-sensitive summary, not raw issue text or private logs.
+The parser rejects malformed SHA values rather than normalizing them. Every reviewer must pass explicitly with empty findings. Stale head/base invalidates both reviews. Persist full role completion receipts and closed-session exports beside evidence; the public PR needs a concise non-sensitive summary, not raw issue text or private logs.
 
 ## Recovery / stop rules
 
