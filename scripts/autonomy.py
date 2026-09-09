@@ -27,7 +27,7 @@ def state_dir(root):
 def lead_command(root):
     return ['hermes', '--profile', 'default', 'chat', '--oneshot', '-Q', '--pass-session-id',
             '--provider', 'openai-codex', '--model', 'gpt-6-astra', '--max-turns', '90',
-            '--run-budget', '2100', '--in', str(root), '--toolsets', 'terminal,file,web,delegation,skills,vision',
+            '--run-budget', '2100', '--in', str(root), '--toolsets', 'terminal,file,web,skills,vision',
             '--query-file', str(root / 'automation/roles/lead.md')]
 
 
