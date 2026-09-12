@@ -3,6 +3,7 @@
 import argparse
 import json
 import os
+import time
 from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
@@ -76,7 +77,8 @@ def supervise(root, runner=bounded_run, preflight=check_repo):
             try:
                 preflight(root)
                 env = dict(os.environ, TERMINAL_CWD=str(root), LWL_ATTEMPT=str(attempt),
-                           LWL_ROOT=str(root), LWL_STATE=str(location))
+                           LWL_ROOT=str(root), LWL_STATE=str(location),
+                           LWL_LEAD_DEADLINE=str(time.time()+2100))
                 code = runner(lead_command(root), root, env, location / f'attempt-{attempt}.log', fd, seconds=2400)
                 row = store.db.execute('SELECT status FROM attempts WHERE id=?', (attempt,)).fetchone()
                 if code != 0 or row[0] != 'success':
