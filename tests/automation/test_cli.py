@@ -117,6 +117,28 @@ class CLITests(unittest.TestCase):
             self.assertFalse(a.supervise(root, runner=runner, preflight=lambda _: None)['wakeAgent'])
             self.assertEqual(len(calls), 2)
 
+    def test_supervisor_pins_lead_deadline_in_real_child_environment(self):
+        import autonomy as a
+        import time
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            subprocess.run(['git','init','-q',str(root)], check=True)
+            observed = []
+            before = time.time()
+            def runner(command, cwd, env, log, fd, seconds):
+                raw = subprocess.check_output([sys.executable,'-c',
+                    "import os,json; print(json.dumps(dict(os.environ)))"], cwd=cwd, env=env)
+                child_env = json.loads(raw)
+                self.assertTrue('LWL_LEAD_DEADLINE' in child_env, 'supervisor must pin the lead deadline')
+                deadline = float(child_env['LWL_LEAD_DEADLINE'])
+                self.assertGreaterEqual(deadline, before+2100)
+                self.assertLessEqual(deadline, time.time()+2100)
+                observed.append(deadline)
+                return 1  # No model, release or production state: isolated failed fixture.
+            with self.assertRaises(a.Blocked):
+                a.supervise(root, runner=runner, preflight=lambda _: None)
+            self.assertEqual(len(observed),1)
+
     def test_supervisor_cleans_only_after_verified_success_under_lock(self):
         import autonomy as a
         from unittest.mock import patch

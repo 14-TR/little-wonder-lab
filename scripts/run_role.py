@@ -293,7 +293,13 @@ def run_process(command, worktree, env, directory, prefix, deadline):
                             failure.add_note(f'role cleanup also failed: {exc!r}')
 
 
-ROLE_SECONDS = {'planner':360, 'engineer':540, 'code-reviewer':360, 'curriculum-reviewer':360}
+# The installed tool executor stops at 420s regardless of terminal's timeout.
+# Keep the entire role inside 390s, then allow 5s cleanup and 10s caller return
+# inside a 405s terminal call, leaving 15s before the executor's own deadline.
+ROLE_SECONDS = {'planner':360, 'engineer':390, 'code-reviewer':360, 'curriculum-reviewer':360}
+# Keep the original downstream reservations; the engineer's saved 150s are slack,
+# not permission to expand work or spend gates/review/release/safe-stop time.
+ROLE_REMAINING = {'planner':1980, 'engineer':1620, 'code-reviewer':900, 'curriculum-reviewer':900}
 
 
 def validate_spec(spec, root, pending, *, now):
@@ -307,12 +313,23 @@ def validate_spec(spec, root, pending, *, now):
         deadline = spec['deadline']
         if type(deadline) not in (int, float) or not math.isfinite(deadline):
             raise ValueError('deadline must be a finite epoch number')
-        seconds = min(maximum, deadline - now)
+        seconds = deadline - now
+        if seconds > maximum:
+            raise ValueError('role window exceeds protected transport maximum')
         if seconds <= 60:
             raise ValueError('insufficient role time including transport reserve')
+        lead_deadline = float(os.environ['LWL_LEAD_DEADLINE'])
+        if not math.isfinite(lead_deadline) or lead_deadline - now < ROLE_REMAINING[role]:
+            raise ValueError('insufficient downstream reserve at role dispatch')
         if not isinstance(spec['context'], str) or not spec['context'].strip():
             raise ValueError('trusted role context required')
-        if pending and (pending['item'] != item or pending['base'] != base):
+        checkpoint_base = base
+        if 'checkpoint_base' in spec:
+            if (role != 'planner' or not pending or
+                    pending.get('stage') not in {'planned', 'engineered', 'reviewed'}):
+                raise ValueError('checkpoint_base is only for an unmerged resumed planner')
+            checkpoint_base = sha40(spec['checkpoint_base'])
+        if pending and (pending['item'] != item or pending['base'] != checkpoint_base):
             raise ValueError('role item/base differs from supervised checkpoint')
         if pending.get('lesson_id') and spec.get('lesson_id', pending['lesson_id']) != pending['lesson_id']:
             raise ValueError('role lesson differs from supervised checkpoint')
@@ -349,8 +366,17 @@ def main(spec_path, root):
         bound_head = base if role == 'planner' else spec.get('sha') if role.endswith('-reviewer') else None
         if bound_head and command(['git','rev-parse','HEAD'], expected) != bound_head:
             raise Blocked('role repository HEAD differs from exact spec')
+        if role == 'planner' and pending and pending['base'] != base:
+            # Only a fresh read-only delta plan may look beyond the saved base.
+            # The checkpoint and all original reports remain unchanged here.
+            try:
+                command(['git', 'merge-base', '--is-ancestor', pending['base'], base], root)
+            except subprocess.CalledProcessError as exc:
+                raise Blocked('planner checkpoint base is not a verified ancestor') from exc
         context = (root/'automation/roles'/f'{role}.md').read_text()+'\n\n'+spec['context']
         directory = location/f'role-{attempt}-{role}-{uuid.uuid4().hex[:8]}'
+        # Git/document preflight consumes real time: re-admit at the spawn boundary.
+        expected, seconds = validate_spec(spec, root, pending, now=time.time())
         result = run_role(expected, directory, role, item, base, context, seconds=seconds,
                           deadline_epoch=spec['deadline'], lesson_id=pending.get('lesson_id') or spec.get('lesson_id'),
                           sha=spec.get('sha') if role.endswith('-reviewer') else None)

@@ -12,6 +12,13 @@ from autonomy_state import Blocked
 
 
 class RoleTransportTests(unittest.TestCase):
+    def setUp(self):
+        import os
+        from unittest.mock import patch
+        env = patch.dict(os.environ, {'LWL_LEAD_DEADLINE':'3100'})
+        env.start()
+        self.addCleanup(env.stop)
+
     def transport(self):
         path = ROOT / 'scripts/run_role.py'
         self.assertTrue(path.is_file(), 'one-shot leads need a synchronous role transport')
@@ -59,13 +66,72 @@ class RoleTransportTests(unittest.TestCase):
 
     def test_engineer_reserves_handoff_inside_existing_dispatch_budget(self):
         m = self.transport()
-        self.assertEqual(m.ROLE_SECONDS['engineer'], 540)
+        self.assertEqual(m.ROLE_SECONDS['engineer'], 390)
         engineer = (ROOT/'automation/roles/engineer.md').read_text()
-        self.assertIn('540 seconds from dispatch', engineer)
+        self.assertIn('390 seconds from dispatch', engineer)
         self.assertIn('1200 words / 12000 UTF-8 bytes', engineer)
-        self.assertIn('Freeze implementation by 360 seconds', engineer)
-        self.assertIn('complete the report by 450 seconds', engineer)
+        self.assertIn('Freeze implementation by 210 seconds', engineer)
+        self.assertIn('complete the report by 300 seconds', engineer)
         self.assertNotIn('12 minutes', engineer)
+
+    def test_engineer_rejects_old_window_before_launch(self):
+        m = self.transport()
+        pending = {'item':'request-2', 'base':'a'*40, 'worktree':str(ROOT),
+                   'lesson_id':'pattern-path', 'stage':'planned'}
+        spec = {'role':'engineer', 'item':'request-2', 'base':'a'*40,
+                'worktree':str(ROOT), 'lesson_id':'pattern-path',
+                'deadline':1540, 'context':'offline admission regression'}
+        # Real admission, not arithmetic reconstructed from prompt wording:
+        # the old 540-second role cannot fit the observed 420-second executor.
+        with self.assertRaisesRegex(Blocked, 'window'):
+            m.validate_spec(spec, ROOT, pending, now=1000)
+        self.assertEqual(m.validate_spec({**spec, 'deadline':1390}, ROOT, pending, now=1000),
+                         (ROOT, 390))
+        with self.assertRaisesRegex(Blocked, 'window'):
+            m.validate_spec({**spec, 'deadline':1390.001}, ROOT, pending, now=1000)
+
+    def test_actual_downstream_admission_after_startup_and_handoff(self):
+        import os
+        from unittest.mock import patch
+        m = self.transport()
+        pending = {'item':'request-2', 'base':'a'*40, 'worktree':str(ROOT),
+                   'lesson_id':'pattern-path', 'stage':'planned'}
+        spec = {'role':'engineer', 'item':'request-2', 'base':'a'*40,
+                'worktree':str(ROOT), 'lesson_id':'pattern-path',
+                'context':'offline admission regression'}
+        # Supervisor starts at 1000. 65s startup/selection + 360s planner;
+        # 55s handoff fits exactly, but an extra millisecond spends a reserve.
+        with patch.dict(os.environ, {'LWL_LEAD_DEADLINE':'3100'}):
+            for now in (1425, 1480):
+                self.assertEqual(m.validate_spec({**spec,'deadline':now+390}, ROOT, pending, now=now),
+                                 (ROOT,390))
+            with self.assertRaisesRegex(Blocked, 'downstream'):
+                m.validate_spec({**spec,'deadline':1870.001}, ROOT, pending, now=1480.001)
+
+    def test_all_roles_keep_reserves_and_require_supervisor_clock(self):
+        import os
+        from unittest.mock import patch
+        m = self.transport()
+        pending = {'item':'request-2','base':'a'*40,'sha':'b'*40,'worktree':str(ROOT),
+                   'lesson_id':'pattern-path','stage':'engineered'}
+        spec = {'item':'request-2','base':'a'*40,'sha':'b'*40,'worktree':str(ROOT),
+                'lesson_id':'pattern-path','context':'offline admission boundaries'}
+        for role, now in (('planner',1065), ('planner',1120), ('engineer',1480),
+                          ('code-reviewer',2200), ('curriculum-reviewer',2200)):
+            with self.subTest(role=role,now=now):
+                window=m.ROLE_SECONDS[role]
+                value={**spec,'role':role,'deadline':now+window}
+                self.assertEqual(m.validate_spec(value,ROOT,pending,now=now),(ROOT,window))
+                if now != 1065:
+                    with self.assertRaisesRegex(Blocked,'downstream'):
+                        m.validate_spec(value,ROOT,pending,now=now+0.001)
+        value={**spec,'role':'engineer','deadline':1390}
+        for clock in (None,'nan','inf','not-an-epoch','1000'):
+            with self.subTest(clock=clock), patch.dict(os.environ, {}, clear=True):
+                if clock is not None:
+                    os.environ['LWL_LEAD_DEADLINE']=clock
+                with self.assertRaises(Blocked):
+                    m.validate_spec(value,ROOT,pending,now=1000)
 
     def test_entrypoint_requires_supervision_before_reading_a_spec(self):
         m = self.transport()
@@ -122,7 +188,7 @@ class RoleTransportTests(unittest.TestCase):
                     'deadline':time.time()+360,'context':'read-only fixture'}
             spec_path = location/'spec.json'
             with patch('autonomy.state_dir', return_value=location), \
-                 patch.dict(os.environ, {'LWL_ATTEMPT':str(attempt)}), \
+                 patch.dict(os.environ, {'LWL_ATTEMPT':str(attempt), 'LWL_LEAD_DEADLINE':str(time.time()+2100)}), \
                  patch.object(m, 'run_role', return_value={'status':'fixture'}) as launch:
                 for change in ({'item':'request-3'}, {'base':'c'*40}, {'sha':'d'*40}):
                     spec_path.write_text(json.dumps({**spec, **change}))
@@ -143,6 +209,252 @@ class RoleTransportTests(unittest.TestCase):
                     with self.assertRaisesRegex(Blocked, 'deadline'):
                         m.main(spec_path, ROOT)
             store.close()
+
+    def test_dispatch_rechecks_reserves_after_git_preflight(self):
+        import os
+        from unittest.mock import patch
+        from autonomy_state import Store
+        import autonomy_release
+        m = self.transport()
+        command = autonomy_release.command
+        head = command(['git','rev-parse','HEAD'], ROOT)
+        with tempfile.TemporaryDirectory() as tmp:
+            location = Path(tmp).resolve()
+            store = Store(location/'state.sqlite3')
+            attempt = store.begin('2000-01-01')  # Isolated fixture only.
+            store.checkpoint(attempt, {'item':'request-2','base':head,'sha':head,
+                'worktree':str(ROOT),'lesson_id':'pattern-path','stage':'engineered'})
+            spec = {'role':'code-reviewer','item':'request-2','base':head,'sha':head,
+                    'worktree':str(ROOT),'lesson_id':'pattern-path','deadline':1360,
+                    'context':'read-only fixture'}
+            spec_path = location/'spec.json'
+            spec_path.write_text(json.dumps(spec))
+            try:
+                with patch('autonomy.state_dir',return_value=location), \
+                     patch.dict(os.environ,{'LWL_ATTEMPT':str(attempt),'LWL_LEAD_DEADLINE':'1900'}), \
+                     patch.object(m.time,'time',return_value=1000) as clock, \
+                     patch.object(m,'run_role',return_value={'status':'fixture'}) as launch:
+                    def slow_git(*args, **kwargs):
+                        result = command(*args, **kwargs)  # Actual repository identity read.
+                        clock.return_value = 1000.001
+                        return result
+                    with patch.object(autonomy_release,'command',side_effect=slow_git):
+                        with self.assertRaisesRegex(Blocked,'downstream'):
+                            m.main(spec_path, ROOT)
+                    launch.assert_not_called()
+            finally:
+                store.close()
+
+    def resumption_fixture(self):
+        """Real isolated Git/SQLite; no canonical state or model process."""
+        import subprocess
+        from autonomy_state import Store
+        tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(tmp.cleanup)
+        root = Path(tmp.name).resolve()/'repo'
+        root.mkdir()
+        def git(*args, cwd=root):
+            return subprocess.check_output(['git', *args], cwd=cwd, text=True,
+                                           stderr=subprocess.PIPE, timeout=10).strip()
+        git('init', '-q', '-b', 'main')
+        (root/'.gitignore').write_text('/.autonomy-worktrees/\n')
+        (root/'lesson.txt').write_text('original lesson\n')
+        (root/'automation/roles').mkdir(parents=True)
+        (root/'automation/roles/planner.md').write_text('Read-only fixture planner')
+        git('add', '.')
+        git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid',
+            'commit', '-qm', 'fixture baseline')
+        old = git('rev-parse', 'HEAD')
+        worktree = root/'.autonomy-worktrees/request-42'
+        git('worktree', 'add', '-b', 'auto/request-42', str(worktree))
+        (worktree/'lesson.txt').write_text('preserved unfinished lesson\n')
+        (root/'maintenance.txt').write_text('maintenance only\n')
+        git('add', 'maintenance.txt')
+        git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid',
+            'commit', '-qm', 'fixture maintenance')
+        current = git('rev-parse', 'HEAD')
+        location = root/'.git/autonomy'
+        store = Store(location/'state.sqlite3')
+        self.addCleanup(store.close)
+        attempt = store.begin('2000-01-01')
+        prior_report = location/'original-plan.json'
+        prior_report.write_text(json.dumps({'base':old, 'original':'immutable fixture'}))
+        pending = {'item':'request-42', 'base':old, 'worktree':str(worktree),
+                   'branch':'auto/request-42', 'lesson_id':'fixture-lesson',
+                   'stage':'planned', 'plan':str(prior_report)}
+        store.checkpoint(attempt, pending)
+        spec = {'role':'planner', 'item':'request-42', 'base':current,
+                'checkpoint_base':old, 'worktree':str(root), 'lesson_id':'fixture-lesson',
+                'deadline':1360, 'context':'fresh-base delta; original plan remains historical'}
+        return self.transport(), root, location, store, attempt, pending, spec, git
+
+    def test_planner_current_base_preserves_original_checkpoint_and_dirty_work(self):
+        import os
+        from unittest.mock import patch
+        m, root, location, store, attempt, pending, spec, git = self.resumption_fixture()
+        prior = Path(pending['plan']).read_bytes()
+        rows = store.db.execute('SELECT * FROM checkpoint').fetchall()
+        worktree = Path(pending['worktree'])
+        dirty = (worktree/'lesson.txt').read_bytes()
+        path = location/'spec.json'
+        path.write_text(json.dumps(spec))
+        with patch.dict(os.environ, {'LWL_ATTEMPT':str(attempt)}), \
+             patch.object(m.time, 'time', return_value=1000), \
+             patch.object(m, 'run_role', return_value={'status':'offline fixture'}) as launch:
+            try:
+                m.main(path, root)
+            except Blocked as exc:
+                self.fail('fresh-base planner was blocked before handoff: '+str(exc))
+            self.assertEqual(launch.call_args.args[4], spec['base'])
+            self.assertEqual(launch.call_args.kwargs['deadline_epoch'], 1360)
+        self.assertEqual(store.db.execute('SELECT * FROM checkpoint').fetchall(), rows)
+        self.assertEqual(store.pending(), pending)
+        self.assertEqual(Path(pending['plan']).read_bytes(), prior)
+        self.assertEqual((worktree/'lesson.txt').read_bytes(), dirty)
+        self.assertEqual(git('rev-parse', 'HEAD', cwd=worktree), pending['base'])
+        self.assertEqual(store.db.execute('SELECT * FROM releases').fetchall(), [])
+        self.assertEqual(store.db.execute('SELECT * FROM attempts').fetchall(),
+                         [(attempt, '2000-01-01', 'running')])
+
+    def test_resumed_planner_rejects_nonancestor_checkpoint_base(self):
+        import os
+        from unittest.mock import patch
+        m, root, location, store, attempt, pending, spec, git = self.resumption_fixture()
+        sibling = git('-c', 'user.name=Test', '-c', 'user.email=test@example.invalid',
+                      'commit-tree', git('rev-parse', 'HEAD^{tree}'), '-p', pending['base'],
+                      '-m', 'divergent fixture')
+        pending = {**pending, 'base':sibling}
+        store.checkpoint(attempt, pending)
+        path = location/'spec.json'
+        path.write_text(json.dumps({**spec, 'checkpoint_base':sibling}))
+        with patch.dict(os.environ, {'LWL_ATTEMPT':str(attempt)}), \
+             patch.object(m.time, 'time', return_value=1000), \
+             patch.object(m, 'run_role', return_value={'status':'offline fixture'}) as launch:
+            with self.assertRaisesRegex(Blocked, 'ancestor'):
+                m.main(path, root)
+            launch.assert_not_called()
+        self.assertEqual(store.pending(), pending)
+
+    def test_checkpoint_base_is_literal_and_planner_only(self):
+        m = self.transport()
+        pending = {'item':'request-42', 'base':'a'*40, 'worktree':str(ROOT),
+                   'lesson_id':'fixture-lesson', 'stage':'planned', 'sha':'c'*40}
+        spec = {'role':'planner', 'item':'request-42', 'base':'b'*40,
+                'checkpoint_base':'a'*40, 'worktree':str(ROOT),
+                'lesson_id':'fixture-lesson', 'deadline':1360, 'context':'offline fixture'}
+        self.assertEqual(m.validate_spec(spec, ROOT, pending, now=1000), (ROOT,360))
+        for change in ({'checkpoint_base':'A'*40}, {'checkpoint_base':'a'*39},
+                       {'checkpoint_base':'a'*40+' '}, {'checkpoint_base':'b'*40},
+                       {'item':'request-43'}, {'lesson_id':'other'},
+                       {'role':'engineer'}, {'role':'code-reviewer', 'sha':'c'*40},
+                       {'role':'curriculum-reviewer', 'sha':'c'*40}):
+            with self.subTest(change=change), self.assertRaises(Blocked):
+                m.validate_spec({**spec, **change}, ROOT, pending, now=1000)
+        with self.assertRaises(Blocked):
+            m.validate_spec({k:v for k,v in spec.items() if k != 'checkpoint_base'},
+                            ROOT, pending, now=1000)
+        for stage in ('merged', 'live', 'unknown', None):
+            with self.subTest(stage=stage), self.assertRaises(Blocked):
+                m.validate_spec(spec, ROOT, {**pending, 'stage':stage}, now=1000)
+        with self.assertRaises(Blocked):
+            m.validate_spec(spec, ROOT, {}, now=1000)
+
+    def test_resumed_planner_still_requires_exact_current_head(self):
+        import os
+        from unittest.mock import patch
+        m, root, location, store, attempt, pending, spec, git = self.resumption_fixture()
+        path = location/'spec.json'
+        path.write_text(json.dumps({**spec, 'base':pending['base']}))
+        with patch.dict(os.environ, {'LWL_ATTEMPT':str(attempt)}), \
+             patch.object(m.time, 'time', return_value=1000), \
+             patch.object(m, 'run_role') as launch:
+            with self.assertRaisesRegex(Blocked, 'HEAD'):
+                m.main(path, root)
+            launch.assert_not_called()
+        self.assertEqual(store.pending(), pending)
+
+    def test_resumed_planner_ancestry_preflight_counts_against_reserve(self):
+        import os
+        from unittest.mock import patch
+        import autonomy_release
+        m, root, location, store, attempt, pending, spec, git = self.resumption_fixture()
+        command = autonomy_release.command
+        path = location/'spec.json'
+        path.write_text(json.dumps(spec))
+        for delay, admitted in ((120, True), (120.001, False)):
+            with self.subTest(delay=delay), \
+                 patch.dict(os.environ, {'LWL_ATTEMPT':str(attempt)}), \
+                 patch.object(m.time, 'time', return_value=1000) as clock, \
+                 patch.object(m, 'run_role', return_value={'status':'offline fixture'}) as launch:
+                def slow_ancestry(argv, *args, **kwargs):
+                    result = command(argv, *args, **kwargs)
+                    if argv[1] == 'merge-base':
+                        clock.return_value += delay
+                    return result
+                with patch.object(autonomy_release, 'command', side_effect=slow_ancestry):
+                    if admitted:
+                        m.main(path, root)
+                        self.assertEqual(launch.call_args.kwargs['deadline_epoch'], 1360)
+                    else:
+                        with self.assertRaisesRegex(Blocked, 'downstream'):
+                            m.main(path, root)
+                        launch.assert_not_called()
+                self.assertEqual(store.pending(), pending)
+
+    def test_resumed_planner_rejects_checkpoint_change_during_handoff(self):
+        import os
+        from unittest.mock import patch
+        m, root, location, store, attempt, pending, spec, git = self.resumption_fixture()
+        path = location/'spec.json'
+        path.write_text(json.dumps(spec))
+        changed = {**pending, 'base':spec['base']}
+        def concurrent_change(*args, **kwargs):
+            store.checkpoint(attempt, changed)  # Isolated conflicting writer fixture.
+            return {'status':'offline fixture'}
+        with patch.dict(os.environ, {'LWL_ATTEMPT':str(attempt)}), \
+             patch.object(m.time, 'time', return_value=1000), \
+             patch.object(m, 'run_role', side_effect=concurrent_change):
+            with self.assertRaisesRegex(Blocked, 'checkpoint'):
+                m.main(path, root)
+        self.assertEqual(store.pending(), changed, 'do not silently undo another writer')
+
+    def test_existing_checkpoint_command_advances_after_dirty_fast_forward(self):
+        import os
+        from unittest.mock import patch
+        import autonomy
+        m, root, location, store, attempt, pending, spec, git = self.resumption_fixture()
+        worktree = Path(pending['worktree'])
+        dirty = (worktree/'lesson.txt').read_bytes()
+        prior_report = Path(pending['plan']).read_bytes()
+        archive = location/'prior-checkpoint.json'
+        with archive.open('x') as stream:
+            json.dump(pending, stream)
+        archive_bytes = archive.read_bytes()
+        # Disjoint maintenance can fast-forward the SAME dirty branch; no stash,
+        # reset, lesson commit, recreation or history rewrite is needed.
+        git('merge', '--ff-only', spec['base'], cwd=worktree)
+        self.assertEqual((worktree/'lesson.txt').read_bytes(), dirty)
+        self.assertEqual(git('rev-parse', 'HEAD', cwd=worktree), spec['base'])
+        self.assertEqual(git('branch', '--show-current', cwd=worktree), pending['branch'])
+        new = {**pending, 'base':spec['base'], 'plan':str(location/'fresh-plan-fixture.json'),
+               'prior_checkpoint_file':str(archive)}
+        path = location/'next-checkpoint.json'
+        path.write_text(json.dumps(new))
+        with patch.dict(os.environ, {'LWL_ATTEMPT':str(attempt)}):
+            autonomy.main(['checkpoint', '--file', str(path)], root=root)
+        self.assertEqual(store.pending(), new)
+        engineer = {'role':'engineer', 'item':new['item'], 'base':new['base'],
+                    'worktree':str(worktree), 'lesson_id':new['lesson_id'],
+                    'deadline':1390, 'context':'offline continuation fixture'}
+        self.assertEqual(m.validate_spec(engineer, root, new, now=1000), (worktree,390))
+        with self.assertRaises(Blocked):
+            m.validate_spec({**engineer, 'base':pending['base']}, root, new, now=1000)
+        self.assertEqual(archive.read_bytes(), archive_bytes)
+        self.assertEqual(json.loads(archive_bytes), pending)
+        self.assertEqual(Path(pending['plan']).read_bytes(), prior_report)
+        self.assertEqual(store.db.execute('SELECT * FROM releases').fetchall(), [])
+        self.assertEqual(store.db.execute('SELECT * FROM attempts').fetchall(),
+                         [(attempt, '2000-01-01', 'running')])
 
     def fixture_cli(self, root):
         path = root/'cli.py'

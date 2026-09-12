@@ -22,8 +22,9 @@ class RoleContractTests(unittest.TestCase):
         self.assertGreaterEqual(budget['Engineering and gates'], 720)
         engineer = re.search(r'a (\d+)-second/35-tool-call budget', lead)
         gates = re.search(r'Reserve the other (\d+) seconds of this stage for lead gates', lead)
-        assert engineer is not None and gates is not None, 'explicit engineer/gate split required'
-        self.assertEqual(int(engineer[1]) + int(gates[1]), budget['Engineering and gates'])
+        slack = re.search(r'keep the remaining (\d+) seconds as dispatch/contingency slack', lead)
+        assert engineer is not None and gates is not None and slack is not None, 'explicit engineer/gate/slack split required'
+        self.assertEqual(int(engineer[1]) + int(gates[1]) + int(slack[1]), budget['Engineering and gates'])
         self.assertGreaterEqual(int(gates[1]), 180, 'selection must not consume mandatory lead gates')
         self.assertGreaterEqual(budget['Independent review'], 360)
         self.assertGreaterEqual(budget['Release'], 420)
