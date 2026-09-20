@@ -19,6 +19,12 @@ Science asks what happens and why. Math gives ways to describe and compare. Engi
 
 All lesson routes remain open. An `order` value sorts the catalog; a `prerequisites` edge explains a connection. Neither means a child has completed, understood, failed, or needs permission to access anything.
 
+## Optional companions (outside the lesson sequence)
+
+Owner-requested issue **#12: Cell Atlas** is implemented as a catalog/home companion link to https://14-tr.github.io/cell-atlas/, with an optional shape-noticing prompt, source link, clear new-tab/external-site wording, generalized mammalian illustration and false-color caveats, and a Google Fonts disclosure. It reuses the Lab's field-notebook design without embedding or duplicating the 3D application.
+
+This is not a fifth lesson, a prerequisite, a new latest field note, or a progress-tracked activity. Existing lesson counts, routes, publication dates, and the next default lesson brief are unchanged. This records implementation scope only, not review, deployment, daily autonomous credit, or a restart of paused automation.
+
 ## Requested lesson implementation
 
 Implemented **2026-09-07** (live America/Denver date): the project owner's starter **GitHub issue #2, Pattern Path**, not a family submission. The complete supplied issue snapshot has no comments. The lesson adds fixed botanical AB/AAB repeats, three additions, kind rule explanations, explicit advance, restart/switching, keyboard access and standalone printable examples. It uses drawn symbols, not collected plants or small pieces, and distinguishes arranged rules from plant growth. This records implementation scope, not deployment success. **Footstep-Free Measuring (`measure-the-road`) remains the next default brief**, subject to eligible requests and safety/access repairs.

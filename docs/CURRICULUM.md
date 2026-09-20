@@ -14,6 +14,16 @@ The suggested duration is **18, 18, and 20 minutes** respectively, including bas
 
 Pattern Path adds an optional **15-minute** Math visit. This duration and its paper adaptation are editorial estimates, not trial findings.
 
+## Optional companion: Cell Atlas
+
+The catalog includes [Cell Atlas](https://14-tr.github.io/cell-atlas/) as an external companion, not a full Little Wonder Lab lesson. It does not enter `src/data/lessons.json`, the lesson sequence, investigation counts, latest-field-note selection, or device-local explored marks. No iframe, Three.js bundle, or remote assets are loaded into the Lab for this link.
+
+The optional invitation is: **“Pick two parts. What shapes do you notice?”** A child can point, talk, draw, or simply look with a grown-up; no naming quiz, written response, materials, or completion is required. This is noticing an illustration, not a controlled comparison, physical observation, or evidence of learning.
+
+The linked project describes a **generalized mammalian interphase cell**, not every animal cell and not a plant cell. Its false colors distinguish parts; sizes, counts, placement, and membrane geometry are illustrative. The catalog explicitly calls it an illustration, not a microscope image, and explains that not every cell looks like this. Do not present it as a measured reconstruction or independently validated biological model.
+
+The [project README](https://github.com/14-TR/cell-atlas) was read for these scope and accuracy limits. This is project documentation, not independent scientific validation. The link clearly opens a new tab on an external site, which loads Google Fonts; the Lab's own no-tracking and local-only behavior must not be extended to that site. Its keyboard structure guide and WebGL reading fallback are described by the project, but physical-phone performance and independent accessibility certification are not claimed here.
+
 ## Initial lesson map
 
 | Lesson / route ID | Main question | Change deliberately | Keep the same | Notice or compare | Reflection evidence |

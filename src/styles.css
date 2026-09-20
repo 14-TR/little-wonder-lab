@@ -97,6 +97,20 @@
   .shelf-card .meta { flex-direction:column; gap:3px; }
   .shelf-card .art-label { font-size:.65rem; padding:0 12px; margin-top:8px; }
   .shelf-card .card-action { margin-top:18px; font-size:.75rem; }
+  .companion-exploration { display:grid; grid-template-columns:1.1fr 1fr; gap:22px 48px; margin-top:36px; padding:32px 0 10px; border-top:1px solid var(--rule); }
+  .companion-intro .eyebrow { color:var(--accent); margin-bottom:12px; }
+  .companion-intro h2 { margin-bottom:12px; }
+  .companion-intro > p + p, .companion-prompt p { margin-top:10px; }
+  .companion-prompt { align-self:center; }
+  .companion-prompt h3 { font-size:1.35rem; }
+  .companion-accuracy, .companion-links, .companion-external { grid-column:1 / -1; }
+  .companion-accuracy { max-width:90ch; }
+  .companion-links { display:flex; flex-wrap:wrap; align-items:center; gap:12px 28px; }
+  .companion-links .button { flex-wrap:wrap; gap:4px 14px; }
+  .companion-tab { font-size:.8rem; font-weight:normal; white-space:nowrap; }
+  .companion-links .text-link { font-size:.85rem; }
+  .companion-external { max-width:90ch; }
+  @media(max-width:580px) { .companion-exploration { grid-template-columns:1fr; gap:22px; padding-top:27px; } .companion-links { align-items:flex-start; flex-direction:column; gap:8px; } }
   .wonder-strip { display:flex; align-items:center; gap:24px; padding:35px 0; margin-top:25px; border-top:1px solid var(--rule); }
   .wonder-strip h2 { font-size:1.55rem; }
   .wonder-strip p { color:var(--muted); font-size:.85rem; margin-top:7px; }
